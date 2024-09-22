@@ -20,17 +20,17 @@ struct script_node {
     struct script_node* prev;
     struct script_node* next;
 };
-struct script_node* script_push(struct script_node** dst_itr) {
+struct script_node* script_push(struct script_node** dst_itr, enum script_kind kind) {
     struct script_node* prev = *dst_itr;
     (*dst_itr)++;
     struct script_node* this = *dst_itr;
     prev->next = this;
     this->prev = prev;
+    this->kind = kind;
     return this;
 }
 void script_parse_val(struct script_node** dst_itr, const char** src_itr) {
-    struct script_node* this = script_push(dst_itr);
-    this->kind = script_kind_push;
+    struct script_node* this = script_push(dst_itr, script_kind_push);
     uint32_t i = 0;
     while (**src_itr == ' ') {
         (*src_itr)++;
@@ -47,17 +47,16 @@ void script_parse_val(struct script_node** dst_itr, const char** src_itr) {
 }
 void script_parse_add(struct script_node** dst_itr, const char** src_itr) {
     script_parse_val(dst_itr, src_itr);
-    char c = **src_itr;
-    while (c == '+' || c == '-') {
-        (*src_itr)++;
-        script_parse_val(dst_itr, src_itr);
-        struct script_node* this = script_push(dst_itr);
-        if (c == '+') {
-            this->kind = script_kind_add;
-        } else if (c == '-') {
-            this->kind = script_kind_sub;
+    while (**src_itr == '+' || **src_itr == '-') {
+        if (**src_itr == '+') {
+            (*src_itr)++;
+            script_parse_val(dst_itr, src_itr);
+            script_push(dst_itr, script_kind_add);
+        } else if (**src_itr == '-') {
+            (*src_itr)++;
+            script_parse_val(dst_itr, src_itr);
+            script_push(dst_itr, script_kind_sub);
         }
-        c = **src_itr;
     }
 }
 void script_load(struct script_node* dst, const char* src) {
