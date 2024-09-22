@@ -8,6 +8,7 @@
 enum script_kind {
     script_kind_null,
     script_kind_push,
+    script_kind_nop,
     script_kind_add,
     script_kind_sub,
     script_kind_ret,
@@ -62,6 +63,7 @@ void script_parse_add(struct script_node** dst_itr, const char** src_itr) {
 void script_load(struct script_node* dst, const char* src) {
     struct script_node* dst_itr = dst;
     const char* src_itr = src;
+    dst->kind = script_kind_nop;
     script_parse_add(&dst_itr, &src_itr);
 }
 
