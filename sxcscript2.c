@@ -4,6 +4,18 @@
 #define script_path "testscript.txt"
 #define script_capacity (1 << 16)
 
+enum script_kind {
+    null,
+    add,
+    ret,
+};
+struct script_node {
+    enum script_kind kind;
+    int amount;
+    struct script_node* prev;
+    struct script_node* next;
+};
+
 int main() {
     char buf[script_capacity];
     int fd = open(script_path, O_RDONLY);
