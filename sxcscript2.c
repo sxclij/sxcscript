@@ -11,7 +11,8 @@ enum script_kind {
 };
 struct script_node {
     enum script_kind kind;
-    int amount;
+    struct script_node* a1;
+    struct script_node* a2;
     struct script_node* prev;
     struct script_node* next;
 };
