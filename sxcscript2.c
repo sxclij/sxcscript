@@ -25,8 +25,6 @@ struct script_node {
     struct script_node* next;
 };
 
-void script_parse_val(struct script_node** dst_itr, const char** src_itr);
-void script_parse_add(struct script_node** dst_itr, const char** src_itr);
 void script_parse_expr(struct script_node** dst_itr, const char** src_itr);
 
 struct script_node* script_node_push(struct script_node** dst_itr, enum script_kind kind) {
@@ -75,20 +73,23 @@ void script_parse_val(struct script_node** dst_itr, const char** src_itr) {
         (*src_itr)++;
     }
 }
-void script_parse_mul(struct script_node** dst_itr, const char** src_itr) {
+void script_parse_unary(struct script_node** dst_itr, const char** src_itr) {
     script_parse_val(dst_itr, src_itr);
+}
+void script_parse_mul(struct script_node** dst_itr, const char** src_itr) {
+    script_parse_unary(dst_itr, src_itr);
     while (**src_itr == '*' || **src_itr == '/' || **src_itr == '%') {
         if (**src_itr == '*') {
             script_parse_nexttoken(src_itr);
-            script_parse_val(dst_itr, src_itr);
+            script_parse_unary(dst_itr, src_itr);
             script_node_push(dst_itr, script_kind_mul);
         } else if (**src_itr == '/') {
             script_parse_nexttoken(src_itr);
-            script_parse_val(dst_itr, src_itr);
+            script_parse_unary(dst_itr, src_itr);
             script_node_push(dst_itr, script_kind_div);
         } else if (**src_itr == '%') {
             script_parse_nexttoken(src_itr);
-            script_parse_val(dst_itr, src_itr);
+            script_parse_unary(dst_itr, src_itr);
             script_node_push(dst_itr, script_kind_mod);
         }
     }
@@ -114,7 +115,7 @@ void script_load(struct script_node* dst, const char* src) {
     struct script_node* dst_itr = dst;
     const char* src_itr = src;
     dst->kind = script_kind_nop;
-    script_parse_add(&dst_itr, &src_itr);
+    script_parse_expr(&dst_itr, &src_itr);
 }
 
 int main() {
