@@ -139,12 +139,10 @@ void script_exec(struct script_node* src, int32_t* mem) {
                 sp[-2] = sp[-1] * sp[-2];
                 sp--;
                 break;
-
             case script_kind_div:
                 sp[-2] = sp[-1] / sp[-2];
                 sp--;
                 break;
-
             case script_kind_mod:
                 sp[-2] = sp[-1] % sp[-2];
                 sp--;
