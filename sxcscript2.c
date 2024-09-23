@@ -24,7 +24,7 @@ struct script_node {
     struct script_node* next;
 };
 
-struct script_node* script_node_push(struct script_node** dst_itr, const char* s, enum script_kind kind) {
+struct script_node* script_parse_push(struct script_node** dst_itr, const char* s, enum script_kind kind) {
     struct script_node* prev = *dst_itr;
     (*dst_itr)++;
     struct script_node* this = *dst_itr;
@@ -65,17 +65,17 @@ void script_parse_expr(struct script_node** dst_itr, const char** src_itr) {
     script_parse_nexttoken(src_itr);
     if (**src_itr == '(') {
         script_parse_expr(dst_itr, src_itr);
-        script_node_push(dst_itr, this_s, script_kind_call);
+        script_parse_push(dst_itr, this_s, script_kind_call);
         return;
     }
-    script_node_push(dst_itr, this_s, script_kind_push);
+    script_parse_push(dst_itr, this_s, script_kind_push);
 }
 void script_load(struct script_node* dst, const char* src) {
     struct script_node* dst_itr = dst;
     const char* src_itr = src;
     dst->kind = script_kind_nop;
     script_parse_expr(&dst_itr, &src_itr);
-    script_node_push(&dst_itr, NULL, script_kind_null);
+    script_parse_push(&dst_itr, NULL, script_kind_null);
 }
 
 int main() {
