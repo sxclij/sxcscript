@@ -45,8 +45,7 @@ void script_parse_nexttoken(const char** src_itr) {
             (*src_itr)++;
         }
     }
-    while (**src_itr == ' ' ||
-           **src_itr == '\n') {
+    while (**src_itr == ' ' || **src_itr == '\n') {
         (*src_itr)++;
     }
 }
@@ -54,23 +53,22 @@ void script_parse_expr(struct script_node** dst_itr, const char** src_itr) {
     const char* this_s = *src_itr;
     if (**src_itr == '(') {
         script_parse_nexttoken(src_itr);
-        script_parse_expr(dst_itr, src_itr);
+        while (**src_itr != ')') {
+            script_parse_expr(dst_itr, src_itr);
+            while (**src_itr == ',' || **src_itr == '\n') {
+                script_parse_nexttoken(src_itr);
+            }
+        }
         script_parse_nexttoken(src_itr);
         return;
     }
     script_parse_nexttoken(src_itr);
     if (**src_itr == '(') {
-        script_parse_nexttoken(src_itr);
         script_parse_expr(dst_itr, src_itr);
         script_node_push(dst_itr, this_s, script_kind_call);
-        script_parse_nexttoken(src_itr);
         return;
     }
     script_node_push(dst_itr, this_s, script_kind_push);
-    if (**src_itr == ',') {
-        script_parse_nexttoken(src_itr);
-        script_parse_expr(dst_itr, src_itr);
-    }
 }
 void script_load(struct script_node* dst, const char* src) {
     struct script_node* dst_itr = dst;
