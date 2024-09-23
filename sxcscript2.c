@@ -14,7 +14,7 @@ enum script_kind {
 };
 struct script_node {
     enum script_kind kind;
-    uint32_t s;
+    uint64_t s;
     struct script_node* prev;
     struct script_node* next;
 };
