@@ -62,7 +62,7 @@ void script_parse_expr(struct script_node** dst_itr, const char** src_itr) {
     if (**src_itr == '(') {
         script_parse_nexttoken(src_itr);
         script_parse_expr(dst_itr, src_itr);
-        struct script_node* this = script_node_push(dst_itr, this_s, script_kind_call);
+        script_node_push(dst_itr, this_s, script_kind_call);
         script_parse_nexttoken(src_itr);
         return;
     }
