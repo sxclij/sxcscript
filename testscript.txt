@@ -1,6 +1,0 @@
-(
-    movi(a, 1)
-    movi(b, 2)
-    mov(c, add(a, b))
-    printi(c)
-)
