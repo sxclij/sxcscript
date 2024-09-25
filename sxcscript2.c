@@ -43,7 +43,7 @@ void sxcscript_load(const char* src, struct sxcscript* sxcscript) {
         sxcscript_free(sxcscript, &sxcscript->node[i+1]);
     }
     sxcscript->main_itr = sxcscript_allocate(sxcscript);
-    sxcscript->main_itr->kind = sxcscript_kind_nop;
+    sxcscript->main_itr->kind = sxcscript_kind_null;
     sxcscript->main_itr->token = NULL;
     sxcscript->main_itr->prev = NULL;
     sxcscript->main_itr->next = NULL;
