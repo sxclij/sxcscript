@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/1.txt"
+#define sxcscript_path "test/2.txt"
 #define sxcscript_capacity (1 << 16)
 
 enum sxcscript_kind {
@@ -27,26 +27,57 @@ struct sxcscript {
     struct sxcscript_node* main_itr;
 };
 
-void nodes_free(struct sxcscript* node, struct sxcscript_node* this) {
-    this->prev = node->free_itr;
-    node->free_itr->next = this;
-    node->free_itr = this;
+void sxcscript_free(struct sxcscript* sxcscript, struct sxcscript_node* this) {
+    this->prev = sxcscript->free_itr;
+    sxcscript->free_itr->next = this;
+    sxcscript->free_itr = this;
 }
-struct sxcscript_node* nodes_allocate(struct sxcscript* node) {
-    struct node* this = node->free_itr;
-    node->free_itr = node->free_itr->prev;
+struct sxcscript_node* sxcscript_allocate(struct sxcscript* sxcscript) {
+    struct sxcscript_node* this = sxcscript->free_itr;
+    sxcscript->free_itr = sxcscript->free_itr->prev;
     return this;
+}
+void sxcscript_tokenize_next(const char* src_itr, struct sxcscript_token** token_itr) {
+    if ((*token_itr)->size == 0) {
+        return;
+    }
+    (*token_itr)++;
+    (*token_itr)->data = src_itr;
+    (*token_itr)->size = 0;
+}
+void sxcscript_tokenize(const char* src, struct sxcscript* sxcscript) {
+    struct sxcscript_token* token_itr = sxcscript->token;
+    const char* src_itr = src;
+    token_itr->size = 0;
+    token_itr->data = src_itr;
+    while (*src_itr) {
+        if (*src_itr == ' ' || *src_itr == '\n') {
+            sxcscript_tokenize_next(src_itr, &token_itr);
+        } else if (*src_itr == '(' || *src_itr == ')' || *src_itr == ',' || *src_itr == '.') {
+            sxcscript_tokenize_next(src_itr, &token_itr);
+            token_itr->data = src_itr;
+            token_itr->size = 1;
+            sxcscript_tokenize_next(src_itr, &token_itr);
+        } else {
+            if (token_itr->size == 0) {
+                token_itr->data = src_itr;
+            }
+            token_itr->size++;
+        }
+        src_itr++;
+    }
 }
 void sxcscript_load(const char* src, struct sxcscript* sxcscript) {
     sxcscript->free_itr = sxcscript->node;
-    for(uint32_t i = 0; i < sxcscript_capacity-1; i++) {
-        sxcscript_free(sxcscript, &sxcscript->node[i+1]);
+    for (uint32_t i = 0; i < sxcscript_capacity - 1; i++) {
+        sxcscript_free(sxcscript, &sxcscript->node[i + 1]);
     }
     sxcscript->main_itr = sxcscript_allocate(sxcscript);
     sxcscript->main_itr->kind = sxcscript_kind_null;
     sxcscript->main_itr->token = NULL;
     sxcscript->main_itr->prev = NULL;
     sxcscript->main_itr->next = NULL;
+    sxcscript_tokenize(src, sxcscript);
 }
 
 int main() {
@@ -59,5 +90,7 @@ int main() {
     close(fd);
     write(STDOUT_FILENO, src, src_n);
     write(STDOUT_FILENO, "\n", 1);
+
+    sxcscript_load(src, &sxcscript);
     return 0;
 }
