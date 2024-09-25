@@ -27,16 +27,6 @@ struct sxcscript {
     struct sxcscript_node* main_itr;
 };
 
-void sxcscript_free(struct sxcscript* sxcscript, struct sxcscript_node* this) {
-    this->prev = sxcscript->free_itr;
-    sxcscript->free_itr->next = this;
-    sxcscript->free_itr = this;
-}
-struct sxcscript_node* sxcscript_allocate(struct sxcscript* sxcscript) {
-    struct sxcscript_node* this = sxcscript->free_itr;
-    sxcscript->free_itr = sxcscript->free_itr->prev;
-    return this;
-}
 void sxcscript_tokenize_next(const char* src_itr, struct sxcscript_token** token_itr) {
     if ((*token_itr)->size == 0) {
         return;
@@ -66,6 +56,16 @@ void sxcscript_tokenize(const char* src, struct sxcscript* sxcscript) {
         }
         src_itr++;
     }
+}
+void sxcscript_free(struct sxcscript* sxcscript, struct sxcscript_node* this) {
+    this->prev = sxcscript->free_itr;
+    sxcscript->free_itr->next = this;
+    sxcscript->free_itr = this;
+}
+struct sxcscript_node* sxcscript_allocate(struct sxcscript* sxcscript) {
+    struct sxcscript_node* this = sxcscript->free_itr;
+    sxcscript->free_itr = sxcscript->free_itr->prev;
+    return this;
 }
 void sxcscript_load(const char* src, struct sxcscript* sxcscript) {
     sxcscript->free_itr = sxcscript->node;
