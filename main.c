@@ -51,6 +51,9 @@ enum bool sxcscript_eq(struct sxcscript_token* token, const char* str) {
         if (token->data[i] != str[i]) {
             return false;
         }
+        if (str[i] == '\0') {
+            return false;
+        }
     }
     if (str[token->size] == '\0') {
         return true;
@@ -168,24 +171,29 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 if (sxcscript_eq(pc->ptr.token, "add")) {
                     sp[-2] = sp[-2] + sp[-1];
                     sp -= 1;
-                    pc = pc->next;;
+                    pc = pc->next;
+                    ;
                 } else if (sxcscript_eq(pc->ptr.token, "mul")) {
                     sp[-2] = sp[-2] * sp[-1];
                     sp -= 1;
-                    pc = pc->next;;
+                    pc = pc->next;
+                    ;
                 } else if (sxcscript_eq(pc->ptr.token, "mod")) {
                     sp[-2] = sp[-2] % sp[-1];
                     sp -= 1;
-                    pc = pc->next;;
+                    pc = pc->next;
+                    ;
                 } else if (sxcscript_eq(pc->ptr.token, "if")) {
                     if (*(--sp) == 0) {
                         pc = pc[-1].ptr.node;
                     } else {
-                        pc = pc->next;;
+                        pc = pc->next;
+                        ;
                     }
                 } else if (sxcscript_eq(pc->ptr.token, "print")) {
                     printf("%d\n", *(--sp));
-                    pc = pc->next;;
+                    pc = pc->next;
+                    ;
                 }
                 break;
         }
