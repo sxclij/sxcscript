@@ -1,16 +1,22 @@
 #include <fcntl.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #define sxcscript_path "test/2.txt"
 #define sxcscript_capacity (1 << 16)
 
+enum bool {
+    false = 0,
+    true = 1,
+};
 enum sxcscript_kind {
     sxcscript_kind_null,
     sxcscript_kind_nop,
     sxcscript_kind_push,
     sxcscript_kind_call,
-    sxcscript_kind_ret,
+    sxcscript_kind_num,
+    sxcscript_kind_var,
 };
 struct sxcscript_token {
     const char* data;
@@ -28,6 +34,18 @@ struct sxcscript {
     struct sxcscript_node node[sxcscript_capacity];
 };
 
+enum bool sxcscript_eq(struct sxcscript_token* token, const char* str) {
+    for (int i = 0; i < token->size; i++) {
+        if (token->data[i] != str[i]) {
+            return false;
+        }
+    }
+    if (str[token->size] == '\0') {
+        return true;
+    } else {
+        return true;
+    }
+}
 void sxcscript_tokenize_next(const char* src_itr, struct sxcscript_token** token_itr) {
     if ((*token_itr)->size == 0) {
         return;
@@ -58,6 +76,14 @@ void sxcscript_tokenize(const char* src, struct sxcscript* sxcscript) {
         src_itr++;
     }
 }
+void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token) {
+    *((*node_itr)++) = (struct sxcscript_node){
+        .kind = kind,
+        .token = token,
+        .prev = node_itr[-1],
+        .next = node_itr[+1],
+    };
+}
 void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** token_itr, struct sxcscript_node** node_itr) {
     struct sxcscript_token* token_this = *token_itr;
     if ((*token_itr)->data[0] == '(') {
@@ -75,19 +101,9 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
     } else if ((*token_itr + 1)->data[0] == '(') {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        *((*node_itr)++) = (struct sxcscript_node){
-            .kind = sxcscript_kind_call,
-            .token = token_this,
-            .prev = NULL,
-            .next = NULL,
-        };
+        sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this);
     } else {
-        *((*node_itr)++) = (struct sxcscript_node) {
-            .kind = sxcscript_kind_push,
-            .token = token_this,
-            .prev = NULL,
-            .next = NULL,
-        };
+        sxcscript_parse_push(node_itr, sxcscript_kind_push, token_this);
         (*token_itr)++;
     }
 }
@@ -99,6 +115,40 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
 void sxcscript_load(const char* src, struct sxcscript* sxcscript) {
     sxcscript_tokenize(src, sxcscript);
     sxcscript_parse(sxcscript);
+}
+void sxcscript_exec(struct sxcscript* sxcscript) {
+    struct sxcscript_node* pc = sxcscript->node;
+    int32_t* sp = sxcscript->mem;
+    while (pc->kind != sxcscript_kind_null) {
+        switch (pc->kind) {
+            case sxcscript_kind_nop:
+                pc++;
+                break;
+            case sxcscript_kind_push:
+                *sp = 0;
+                for (int i = 0; i < pc->token->size; i++) {
+                    *sp = (*sp * 10) + pc->token->data[i] - '0';
+                }
+                sp++;
+                pc++;
+                break;
+            case sxcscript_kind_call:
+                if (sxcscript_eq(pc->token, "add")) {
+                    sp[-2] = sp[-2] + sp[-1];
+                    sp--;
+                } else if (sxcscript_eq(pc->token, "mul")) {
+                    sp[-2] = sp[-2] * sp[-1];
+                    sp--;
+                } else if (sxcscript_eq(pc->token, "mod")) {
+                    sp[-2] = sp[-2] % sp[-1];
+                    sp--;
+                } else if (sxcscript_eq(pc->token, "print")) {
+                    printf("%d\n", *(--sp));
+                }
+                pc++;
+                break;
+        }
+    }
 }
 
 int main() {
@@ -113,5 +163,6 @@ int main() {
     write(STDOUT_FILENO, "\n", 1);
 
     sxcscript_load(src, &sxcscript);
+    sxcscript_exec(&sxcscript);
     return 0;
 }
