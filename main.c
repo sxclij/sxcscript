@@ -48,6 +48,16 @@ struct sxcscript_node* sxcscript_node_alloc(struct sxcscript_node** free) {
     *free = (*free)->prev;
     return node;
 }
+struct sxcscript_node* sxcscript_node_insert(struct sxcscript_node** free, struct sxcscript_node* next) {
+    struct sxcscript_node* node = sxcscript_node_alloc(free);
+    node->next = next;
+    node->prev = next->prev;
+    next->prev = node;
+    if (node->prev) {
+        node->prev->next = node;
+    }
+    return node;
+}
 void sxcscript_node_init(struct sxcscript* sxcscript) {
     sxcscript->free = sxcscript->node;
     for (int i = 0; i < sxcscript_capacity - 1; i++) {
@@ -77,6 +87,12 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
             token_itr->size++;
         }
     }
+}
+void sxcscript_parse_push(struct sxcscript_node** free, struct sxcscript_node* parsed, enum sxcscript_kind kind, struct sxcscript_token* token) {
+    struct sxcscript_node* node = sxcscript_node_insert(free, parsed);
+    *node = (struct sxcscript_node){kind, token, parsed, parsed->next};
+}
+void sxcscript_parse(struct sxcscript* sxcscript) {
 }
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_node_init(sxcscript);
