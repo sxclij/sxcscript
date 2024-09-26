@@ -55,10 +55,11 @@ struct sxcscript {
     int32_t mem[sxcscript_capacity];
     struct sxcscript_inst inst[sxcscript_capacity];
     struct sxcscript_token token[sxcscript_capacity];
-    struct sxcscript_node node[sxcscript_capacity];
-    struct sxcscript_node* parsed;
-    struct sxcscript_node* var;
-    struct sxcscript_node* label;
+    struct sxcscript_node parsed[sxcscript_capacity];
+    struct sxcscript_node var[sxcscript_capacity];
+    struct sxcscript_node label[sxcscript_capacity];
+    int var_size;
+    int label_size;
 };
 
 int32_t sxcscript_node_to_int32(struct sxcscript_node* node) {
@@ -69,6 +70,9 @@ int32_t sxcscript_node_to_int32(struct sxcscript_node* node) {
         ret = (ret * 10) + node->token->data[i] - '0';
     }
     return is_neg ? -ret : ret;
+}
+
+void sxcscript_node_insert(struct sxcscript_node* next, enum sxcscript_kind kind, struct sxcscript_token* token) {
 }
 enum bool sxcscript_token_eq(struct sxcscript_token* token1, struct sxcscript_token* token2) {
     if(token1->size != token2->size) {
@@ -95,8 +99,6 @@ enum bool sxcscript_token_eq_str(struct sxcscript_token* token, const char* str)
     } else {
         return true;
     }
-}
-void sxcscript_node_insert(struct sxcscript_node* next, enum sxcscript_kind kind, struct sxcscript_token* token) {
 }
 void sxcscript_tokenize_next(const char* src_itr, struct sxcscript_token** token_itr) {
     if ((*token_itr)->size == 0) {
@@ -174,27 +176,33 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
 }
 void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
-    struct sxcscript_node* node_itr = sxcscript->node;
+    struct sxcscript_node* node_itr = sxcscript->parsed;
     sxcscript_parse_expr(sxcscript, &token_itr, &node_itr);
 }
 void sxcscript_toinst(struct sxcscript* sxcscript) {
-    struct sxcscript_node* node_itr = sxcscript->node;
+    struct sxcscript_node* node_itr = sxcscript->parsed;
     struct sxcscript_inst* inst_itr = sxcscript->inst;
     while (node_itr->kind != sxcscript_kind_null) {
         switch (node_itr->kind) {
             case sxcscript_kind_nop:
                 break;
             case sxcscript_kind_push:
-                if ('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') {
+                if ('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9' || node_itr->token->data[0] == '-') {
                     inst_itr->kind = sxcscript_kind_push_val;
-                    inst_itr->value = 0;
-                    for (int i = 0; i < node_itr->token->size; i++) {
-                        inst_itr->value = (inst_itr->value * 10) + node_itr->token->data[i] - '0';
-                    }
+                    inst_itr->value = sxcscript_node_to_int32(node_itr);
                 } else {
                     inst_itr->kind = sxcscript_kind_push_var;
-
+                    for(int i = 0; i < sxcscript->var_size; i++) {
+                        if (sxcscript_token_eq(&sxcscript->var[i], node_itr->token)) {
+                            inst_itr->value = i;
+                            break;
+                        }
+                        if(i == sxcscript->var_size - 1) {
+                            sxcscript->var[sxcscript->var_size++] = *node_itr;
+                        }
+                    }
                 }
+                inst_itr++;
                 break;
             default:
                 break;
@@ -208,7 +216,7 @@ void sxcscript_load(const char* src, struct sxcscript* sxcscript) {
     sxcscript_toinst(sxcscript);
 }
 void sxcscript_exec(struct sxcscript* sxcscript) {
-    struct sxcscript_node* pc = sxcscript->node;
+    struct sxcscript_node* pc = sxcscript->parsed;
     int32_t* sp = sxcscript->mem;
     while (pc->kind != sxcscript_kind_null) {
         switch (pc->kind) {
