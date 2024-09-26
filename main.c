@@ -20,11 +20,18 @@ enum sxcscript_kind {
     sxcscript_kind_label,
     sxcscript_kind_jmp,
     sxcscript_kind_jze,
+    sxcscript_kind_mov,
+    sxcscript_kind_movi,
     sxcscript_kind_add,
     sxcscript_kind_sub,
     sxcscript_kind_mul,
     sxcscript_kind_div,
     sxcscript_kind_mod,
+};
+enum sxcscript_global {
+    sxcscript_global_sp,
+    sxcscript_global_bp,
+    sxcscript_global_ip,
 };
 struct sxcscript_token {
     const char* data;
@@ -101,12 +108,12 @@ struct sxcscript_node* sxcscript_node_insert(struct sxcscript_node** free, struc
     return node;
 }
 struct sxcscript_node* sxcscript_node_find(struct sxcscript_node* src, struct sxcscript_node* this) {
-    for (struct sxcscript_node* itr = src; itr->kind != sxcscript_kind_null; itr = itr->prev) {
+    for (struct sxcscript_node* itr = src->prev; itr != NULL; itr = itr->prev) {
         if (itr->token == this->token) {
             return itr;
         }
     }
-    for (struct sxcscript_node* itr = src; itr->kind != sxcscript_kind_null; itr = itr->prev) {
+    for (struct sxcscript_node* itr = src->prev; itr != NULL; itr = itr->prev) {
         if (sxcscript_token_eq(itr->token, this->token)) {
             return itr;
         }
@@ -166,6 +173,7 @@ void sxcscript_parse_expr(struct sxcscript_node** free, struct sxcscript_node* p
                 (*token_itr)++;
             }
         }
+        (*token_itr)++;
     } else if (sxcscript_token_eq_str(token_this, ".")) {
         (*token_itr)++;
         sxcscript_parse_expr(free, node_this, token_itr);
@@ -206,7 +214,11 @@ void sxcscript_assemble(struct sxcscript* sxcscript) {
             }
             inst_itr++;
         } else if (parsed_itr->kind == sxcscript_kind_call) {
-            if (sxcscript_token_eq_str(parsed_itr->token, "add")) {
+            if (sxcscript_token_eq_str(parsed_itr->token, "mov")) {
+                inst_itr->kind = sxcscript_kind_mov;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "movi")) {
+                inst_itr->kind = sxcscript_kind_movi;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "add")) {
                 inst_itr->kind = sxcscript_kind_add;
             } else if (sxcscript_token_eq_str(parsed_itr->token, "sub")) {
                 inst_itr->kind = sxcscript_kind_sub;
@@ -228,40 +240,31 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_parse(&sxcscript->free, sxcscript->parsed, sxcscript->token);
     sxcscript_assemble(sxcscript);
 }
-void sxcscript_exec(struct sxcscript* sxcscript) {
-    struct sxcscript_inst* pc = sxcscript->inst;
-    int32_t* sp = sxcscript->mem + 128;
-    int32_t* bp = sxcscript->mem + 128;
-    while (pc->kind != sxcscript_kind_null) {
-        switch (pc->kind) {
+void sxcscript_exec(struct sxcscript_inst* inst, int32_t* mem) {
+    int32_t* sp = &mem[sxcscript_global_sp];
+    int32_t* bp = &mem[sxcscript_global_bp];
+    int32_t* ip = &mem[sxcscript_global_ip];
+    *sp = 256;
+    *bp = 128;
+    *ip = 0;
+    while (inst[*ip].kind != sxcscript_kind_null) {
+        switch (inst[*ip].kind) {
             case sxcscript_kind_push_val:
-                *(sp++) = pc->value;
+                mem[(*sp)++] = inst[*ip].value;
                 break;
             case sxcscript_kind_push_var:
-                *(sp++) = *(bp - pc->value);
+                mem[(*sp)++] = *bp + inst[*ip].value;
                 break;
-            case sxcscript_kind_add:
-                sp[-2] += sp[-1];
-                sp -= 1;
+            case sxcscript_kind_mov:
+                mem[mem[*sp - 2]] = mem[mem[*sp - 1]];
+                *sp -= 2;
                 break;
-            case sxcscript_kind_sub:
-                sp[-2] -= sp[-1];
-                sp -= 1;
-                break;
-            case sxcscript_kind_mul:
-                sp[-2] *= sp[-1];
-                sp -= 1;
-                break;
-            case sxcscript_kind_div:
-                sp[-2] /= sp[-1];
-                sp -= 1;
-                break;
-            case sxcscript_kind_mod:
-                sp[-2] %= sp[-1];
-                sp -= 1;
+            case sxcscript_kind_movi:
+                mem[mem[*sp - 2]] = mem[*sp - 1];
+                *sp -= 2;
                 break;
         }
-        pc++;
+        (*ip)++;
     }
 }
 
@@ -278,7 +281,7 @@ int main() {
 
     sxcscript_init(&sxcscript, src);
 
-    sxcscript_exec(&sxcscript);
+    sxcscript_exec(sxcscript.inst, sxcscript.mem);
 
     return 0;
 }

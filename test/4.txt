@@ -1,1 +1,5 @@
-add(1,2)
+(
+    a.movi(1)
+    b.movi(2)
+    c.mov(a)
+)
