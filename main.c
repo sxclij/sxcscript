@@ -38,6 +38,23 @@ struct sxcscript {
     struct sxcscript_node* label;
 };
 
+void sxcscript_node_free(struct sxcscript_node** free, struct sxcscript_node* node) {
+    node->prev = *free;
+    (*free)->next = node;
+    *free = node;
+}
+struct sxcscript_node* sxcscript_node_alloc(struct sxcscript_node** free, struct sxcscript_node* next) {
+    struct sxcscript_node* node = *free;
+    *free = (*free)->prev;
+    return node;
+}
+void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
+    sxcscript->free = sxcscript->node;
+    for(int i = 0; i < sxcscript_capacity-1; i++) {
+        sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
+    }
+
+}
 
 int main() {
     char src[sxcscript_capacity];
@@ -49,6 +66,8 @@ int main() {
     close(fd);
     write(STDOUT_FILENO, src, src_n);
     write(STDOUT_FILENO, "\n", 1);
+
+    sxcscript_init(&sxcscript, src);
 
     return 0;
 }
