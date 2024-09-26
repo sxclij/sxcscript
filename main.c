@@ -140,66 +140,6 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         sxcscript_parse_push(node_itr, sxcscript_kind_label, token_this);
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
         sxcscript_parse_push(node_itr, sxcscript_kind_jmp, token_this);
-    } else if (sxcscript_eq(*token_itr, "add")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_add, token_this);
-    } else if (sxcscript_eq(*token_itr, "sub")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_sub, token_this);
-    } else if (sxcscript_eq(*token_itr, "mul")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_mul, token_this);
-    } else if (sxcscript_eq(*token_itr, "div")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_div, token_this);
-    } else if (sxcscript_eq(*token_itr, "mod")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_mod, token_this);
-    } else if (sxcscript_eq(*token_itr, "not")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_not, token_this);
-    } else if (sxcscript_eq(*token_itr, "and")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_and, token_this);
-    } else if (sxcscript_eq(*token_itr, "or")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_or, token_this);
-    } else if (sxcscript_eq(*token_itr, "xor")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_xor, token_this);
-    } else if (sxcscript_eq(*token_itr, "eq")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_eq, token_this);
-    } else if (sxcscript_eq(*token_itr, "ne")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_ne, token_this);
-    } else if (sxcscript_eq(*token_itr, "lt")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_lt, token_this);
-    } else if (sxcscript_eq(*token_itr, "le")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_le, token_this);
-    } else if (sxcscript_eq(*token_itr, "gt")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_gt, token_this);
-    } else if (sxcscript_eq(*token_itr, "ge")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-        sxcscript_parse_push(node_itr, sxcscript_kind_ge, token_this);
     } else if (sxcscript_eq(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
