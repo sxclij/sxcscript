@@ -50,15 +50,37 @@ struct sxcscript_node* sxcscript_node_alloc(struct sxcscript_node** free) {
 }
 void sxcscript_node_init(struct sxcscript* sxcscript) {
     sxcscript->free = sxcscript->node;
-    for(int i = 0; i < sxcscript_capacity-1; i++) {
+    for (int i = 0; i < sxcscript_capacity - 1; i++) {
         sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
     }
     sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
     sxcscript->var = sxcscript_node_alloc(&sxcscript->free);
     sxcscript->label = sxcscript_node_alloc(&sxcscript->free);
 }
+void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
+    struct sxcscript_token* token_itr = token;
+    *token_itr = (struct sxcscript_token){src, 0};
+    for (const char* src_itr = src; *src_itr != '\0'; src_itr++) {
+        if (*src_itr == ' ' || *src_itr == '\n') {
+            if (token_itr->size != 0) {
+                token_itr++;
+            }
+        } else if (*src_itr == '(' || *src_itr == ')' || *src_itr == ',' || *src_itr == '.') {
+            if (token_itr->size != 0) {
+                token_itr++;
+            }
+            *(token_itr++) = (struct sxcscript_token){src_itr, 1};
+        } else {
+            if (token_itr->size == 0) {
+                token_itr->data = src_itr;
+            }
+            token_itr->size++;
+        }
+    }
+}
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_node_init(sxcscript);
+    sxcscript_tokenize(src, sxcscript->token);
 }
 
 int main() {
