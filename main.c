@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/4.txt"
+#define sxcscript_path "test/5.txt"
 #define sxcscript_capacity (1 << 16)
 
 enum bool {
@@ -210,15 +210,19 @@ void sxcscript_parse(struct sxcscript_node** free, struct sxcscript_node* parsed
 void sxcscript_assemble_label(struct sxcscript_node** free, struct sxcscript_node* parsed_begin, struct sxcscript_node* label_itr) {
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_label) {
-            struct sxcscript_node* label_node = sxcscript_node_insert(free, label_itr);
-            *label_node = (struct sxcscript_node){.kind = sxcscript_kind_nop, .value.token = parsed_itr->value.token, .prev = label_node->prev, .next = label_node->next};
+            struct sxcscript_node* node = sxcscript_node_insert(free, label_itr);
+            *node = (struct sxcscript_node){.kind = sxcscript_kind_nop, .value.token = parsed_itr->value.token, .prev = node->prev, .next = node->next};
         }
     }
 }
 void sxcscript_assemble_inst(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
+    struct sxcscript_node* label = sxcscript->label;
+    struct sxcscript_node* label_begin = sxcscript->label;
     struct sxcscript_node* var_itr = sxcscript->var;
-    struct sxcscript_node* label_itr = sxcscript->label;
     struct sxcscript_inst* inst_itr = sxcscript->inst;
+    while (label_begin->prev != NULL) {
+        label_begin = label_begin->prev;
+    }
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_push) {
             if ('0' <= parsed_itr->value.token->data[0] && parsed_itr->value.token->data[0] <= '9' || parsed_itr->value.token->data[0] == '-') {
@@ -235,9 +239,17 @@ void sxcscript_assemble_inst(struct sxcscript* sxcscript, struct sxcscript_node*
             }
             inst_itr++;
         } else if (parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
+            struct sxcscript_node* label_itr = label_begin;
+            for (int32_t i = 0; 1; i++) {
+                if (label_itr->value.token == parsed_itr->value.token) {
+                    *inst_itr = (struct sxcscript_inst){.kind = parsed_itr->kind, .value = i};
+                    break;
+                }
+                label_itr = label_itr->next;
+            }
             inst_itr++;
         } else if (parsed_itr->kind == sxcscript_kind_label) {
-            struct sxcscript_node* label = sxcscript_node_insert(&sxcscript->free, label_itr);
+            struct sxcscript_node* label = sxcscript_node_insert(&sxcscript->free, label);
             *label = (struct sxcscript_node){.kind = sxcscript_kind_nop, .value.token = parsed_itr->value.token, .prev = label->prev, .next = label->next};
         } else if (parsed_itr->kind == sxcscript_kind_call) {
             if (sxcscript_token_eq_str(parsed_itr->value.token, "mov")) {
