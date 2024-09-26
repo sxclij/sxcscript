@@ -70,7 +70,18 @@ int32_t sxcscript_node_to_int32(struct sxcscript_node* node) {
     }
     return is_neg ? -ret : ret;
 }
-enum bool sxcscript_node_eq_str(struct sxcscript_token* token, const char* str) {
+enum bool sxcscript_token_eq(struct sxcscript_token* token1, struct sxcscript_token* token2) {
+    if(token1->size != token2->size) {
+        return false;
+    }
+    for (int i = 0; i < token1->size; i++) {
+        if (token1->data[i] != token2->data[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+enum bool sxcscript_token_eq_str(struct sxcscript_token* token, const char* str) {
     for (int i = 0; i < token->size; i++) {
         if (token->data[i] != str[i]) {
             return false;
@@ -129,30 +140,30 @@ void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind 
 void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** token_itr, struct sxcscript_node** node_itr) {
     struct sxcscript_token* token_this = *token_itr;
     struct sxcscript_node* node_this = *node_itr;
-    if (sxcscript_node_eq_str(*token_itr, "(")) {
+    if (sxcscript_token_eq_str(*token_itr, "(")) {
         (*token_itr)++;
-        while (sxcscript_node_eq_str(*token_itr, ")") == false) {
+        while (sxcscript_token_eq_str(*token_itr, ")") == false) {
             sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-            if (sxcscript_node_eq_str(*token_itr, ",")) {
+            if (sxcscript_token_eq_str(*token_itr, ",")) {
                 (*token_itr)++;
             }
         }
         (*token_itr)++;
-    } else if (sxcscript_node_eq_str(*token_itr, ".")) {
+    } else if (sxcscript_token_eq_str(*token_itr, ".")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
-    } else if (sxcscript_node_eq_str(*token_itr, "if")) {
+    } else if (sxcscript_token_eq_str(*token_itr, "if")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
         sxcscript_parse_push(node_itr, sxcscript_kind_jze, token_this);
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
         sxcscript_parse_push(node_itr, sxcscript_kind_label, token_this);
-    } else if (sxcscript_node_eq_str(*token_itr, "loop")) {
+    } else if (sxcscript_token_eq_str(*token_itr, "loop")) {
         (*token_itr)++;
         sxcscript_parse_push(node_itr, sxcscript_kind_label, token_this);
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
         sxcscript_parse_push(node_itr, sxcscript_kind_jmp, token_this);
-    } else if (sxcscript_node_eq_str(*token_itr + 1, "(")) {
+    } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, node_itr);
         sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this);
