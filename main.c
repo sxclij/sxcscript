@@ -50,7 +50,5 @@ int main() {
     write(STDOUT_FILENO, src, src_n);
     write(STDOUT_FILENO, "\n", 1);
 
-    sxcscript_load(src, &sxcscript);
-    sxcscript_exec(&sxcscript);
     return 0;
 }
