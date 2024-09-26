@@ -228,6 +228,42 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_parse(&sxcscript->free, sxcscript->parsed, sxcscript->token);
     sxcscript_assemble(sxcscript);
 }
+void sxcscript_exec(struct sxcscript* sxcscript) {
+    struct sxcscript_inst* pc = sxcscript->inst;
+    int32_t* sp = sxcscript->mem + 128;
+    int32_t* bp = sxcscript->mem + 128;
+    while (pc->kind != sxcscript_kind_null) {
+        switch (pc->kind) {
+            case sxcscript_kind_push_val:
+                *(sp++) = pc->value;
+                break;
+            case sxcscript_kind_push_var:
+                *(sp++) = *(bp - pc->value);
+                break;
+            case sxcscript_kind_add:
+                sp[-2] += sp[-1];
+                sp -= 1;
+                break;
+            case sxcscript_kind_sub:
+                sp[-2] -= sp[-1];
+                sp -= 1;
+                break;
+            case sxcscript_kind_mul:
+                sp[-2] *= sp[-1];
+                sp -= 1;
+                break;
+            case sxcscript_kind_div:
+                sp[-2] /= sp[-1];
+                sp -= 1;
+                break;
+            case sxcscript_kind_mod:
+                sp[-2] %= sp[-1];
+                sp -= 1;
+                break;
+        }
+        pc++;
+    }
+}
 
 int main() {
     char src[sxcscript_capacity];
@@ -241,6 +277,8 @@ int main() {
     write(STDOUT_FILENO, "\n", 1);
 
     sxcscript_init(&sxcscript, src);
+
+    sxcscript_exec(&sxcscript);
 
     return 0;
 }
