@@ -42,7 +42,7 @@ struct sxcscript_node {
     enum sxcscript_kind kind;
     struct sxcscript_token* token;
     union {
-        uint64_t u64;
+        uint64_t label_i;
     } val;
     struct sxcscript_node* prev;
     struct sxcscript_node* next;
