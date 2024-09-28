@@ -44,6 +44,9 @@ struct sxcscript_node {
     union {
         uint64_t label_i;
     } val;
+    struct sxcscript_node* hs1;
+    struct sxcscript_node* hs2;
+    struct sxcscript_node* hs3;
     struct sxcscript_node* prev;
     struct sxcscript_node* next;
 };
