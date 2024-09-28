@@ -5,6 +5,7 @@
 
 #define sxcscript_path "test/5.txt"
 #define sxcscript_capacity (1 << 16)
+#define sxcscript_buf_capacity (1 << 10)
 
 enum bool {
     false = 0,
@@ -208,6 +209,12 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         } else {
             sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, token_if);
         }
+    } else if (sxcscript_token_eq_str(token_this, "loop")) {
+        struct sxcscript_token* token_loop = *token_itr;
+        (*token_itr)++;
+        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, token_loop);
+        sxcscript_parse_expr(sxcscript, token_itr);
+        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jmp, token_loop);
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr);
