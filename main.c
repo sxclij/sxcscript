@@ -259,17 +259,16 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
                 parsed_itr->kind = sxcscript_kind_push_var;
             }
             *(stack_end++) = parsed_itr;
-        }
-        else if (parsed_itr->kind == sxcscript_kind_call) {
-            if(sxcscript_token_eq_str(parsed_itr->token, "mov")) {
+        } else if (parsed_itr->kind == sxcscript_kind_call) {
+            if (sxcscript_token_eq_str(parsed_itr->token, "mov")) {
                 hs2 = sxcscript_node_pop(&sxcscript->free, &stack_end);
                 hs1 = sxcscript_node_pop(&sxcscript->free, &stack_end);
-                if(hs2->kind == sxcscript_kind_push_val) {
+                if (hs2->kind == sxcscript_kind_push_val) {
                     parsed_itr->kind = sxcscript_kind_movi;
                 }
                 parsed_itr->hs1 = hs1;
                 parsed_itr->hs2 = hs2;
-             }
+            }
         }
     }
 }
