@@ -231,11 +231,11 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         (*token_itr)++;
     }
 }
-void sxcscript_parse(struct sxcscript* sxcscript) {
+void sxcscript_p4arse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
     sxcscript_parse_expr(sxcscript, &token_itr);
 }
-struct sxcscript_node* sxcscript_node_pop(struct sxcscript_node** free, struct sxcscript_node*** stack_end) {
+struct sxcscript_node* sxcscript_analyze_pop(struct sxcscript_node** free, struct sxcscript_node*** stack_end) {
     struct sxcscript_node* node = *(--(*stack_end));
     node->throug = true;
     return node;
