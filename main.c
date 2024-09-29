@@ -231,7 +231,7 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         (*token_itr)++;
     }
 }
-void sxcscript_p4arse(struct sxcscript* sxcscript) {
+void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
     sxcscript_parse_expr(sxcscript, &token_itr);
 }
@@ -261,8 +261,8 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
             *(stack_end++) = parsed_itr;
         } else if (parsed_itr->kind == sxcscript_kind_call) {
             if (sxcscript_token_eq_str(parsed_itr->token, "mov")) {
-                hs2 = sxcscript_node_pop(&sxcscript->free, &stack_end);
-                hs1 = sxcscript_node_pop(&sxcscript->free, &stack_end);
+                hs2 = sxcscript_analyze_pop(&sxcscript->free, &stack_end);
+                hs1 = sxcscript_analyze_pop(&sxcscript->free, &stack_end);
                 if (hs2->kind == sxcscript_kind_push_val) {
                     parsed_itr->kind = sxcscript_kind_movi;
                 }
