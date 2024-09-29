@@ -42,9 +42,10 @@ struct sxcscript_node {
     enum sxcscript_kind kind;
     struct sxcscript_token* token;
     union {
-        uint64_t label_i;
+        int32_t label_i;
         struct sxcscript_node* label_break;
         struct sxcscript_node* label_continue;
+        int32_t literal;
     } val;
     struct sxcscript_node* hs1;
     struct sxcscript_node* hs2;
@@ -235,11 +236,23 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
 }
 void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_itr = sxcscript->parsed;
-    while(parsed_itr->prev != NULL) {
+    struct sxcscript_node* stack[sxcscript_buf_capacity];
+    int32_t stack_size = 0;
+    while (parsed_itr->prev != NULL) {
         parsed_itr = parsed_itr->prev;
     }
-    for(; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
-
+    for (; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
+        if (parsed_itr->kind == sxcscript_kind_push) {
+            if ('0' <= parsed_itr->token->data[0] && parsed_itr->token->data[0] <= '9' || parsed_itr->token->data[0] == '-') {
+                parsed_itr->val.literal = sxcscript_token_to_int32(parsed_itr->token);
+                parsed_itr->kind = sxcscript_kind_push_val;
+            } else {
+                parsed_itr->kind = sxcscript_kind_push_var;
+            }
+            stack[stack_size++] = parsed_itr;
+        }
+        else if (parsed_itr->kind == sxcscript_kind_call) {
+        }
     }
 }
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
