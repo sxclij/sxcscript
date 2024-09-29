@@ -233,18 +233,20 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
     sxcscript_parse_expr(sxcscript, &token_itr);
 }
-void sxcscript_allocate(struct sxcscript* sxcscript) {
+void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_itr = sxcscript->parsed;
     while(parsed_itr->prev != NULL) {
         parsed_itr = parsed_itr->prev;
     }
-    
+    for(; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
+
+    }
 }
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_node_init(sxcscript);
     sxcscript_tokenize(src, sxcscript->token);
     sxcscript_parse(sxcscript);
-    sxcscript_allocate(sxcscript);
+    sxcscript_analyze(sxcscript);
 }
 
 int main() {

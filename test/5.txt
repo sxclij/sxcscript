@@ -1,8 +1,8 @@
 (
     if(1) (
-        movi(b, 2)
+        mov(b, 2)
     )
     else (
-        movi(b, 3)
+        mov(b, 3)
     )
 )
