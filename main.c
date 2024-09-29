@@ -50,6 +50,7 @@ struct sxcscript_node {
     struct sxcscript_node* hs1;
     struct sxcscript_node* hs2;
     struct sxcscript_node* hs3;
+    enum bool throug;
     struct sxcscript_node* prev;
     struct sxcscript_node* next;
 };
@@ -234,10 +235,18 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
     sxcscript_parse_expr(sxcscript, &token_itr);
 }
+struct sxcscript_node* sxcscript_node_pop(struct sxcscript_node** free, struct sxcscript_node*** stack_end) {
+    struct sxcscript_node* node = *(--(*stack_end));
+    node->throug = true;
+    return node;
+}
 void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_itr = sxcscript->parsed;
     struct sxcscript_node* stack[sxcscript_buf_capacity];
-    int32_t stack_size = 0;
+    struct sxcscript_node** stack_end = stack;
+    struct sxcscript_node* hs1;
+    struct sxcscript_node* hs2;
+    struct sxcscript_node* hs3;
     while (parsed_itr->prev != NULL) {
         parsed_itr = parsed_itr->prev;
     }
@@ -249,9 +258,18 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
             } else {
                 parsed_itr->kind = sxcscript_kind_push_var;
             }
-            stack[stack_size++] = parsed_itr;
+            *(stack_end++) = parsed_itr;
         }
         else if (parsed_itr->kind == sxcscript_kind_call) {
+            if(sxcscript_token_eq_str(parsed_itr->token, "mov")) {
+                hs2 = sxcscript_node_pop(&sxcscript->free, &stack_end);
+                hs1 = sxcscript_node_pop(&sxcscript->free, &stack_end);
+                if(hs2->kind == sxcscript_kind_push_val) {
+                    parsed_itr->kind = sxcscript_kind_movi;
+                }
+                parsed_itr->hs1 = hs1;
+                parsed_itr->hs2 = hs2;
+             }
         }
     }
 }
