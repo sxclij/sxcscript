@@ -30,9 +30,9 @@ enum sxcscript_kind {
     sxcscript_kind_mod,
 };
 enum sxcscript_global {
-    sxcscript_global_sp,
-    sxcscript_global_bp,
-    sxcscript_global_ip,
+    sxcscript_global_ip = 0,
+    sxcscript_global_sp = 1,
+    sxcscript_global_bp = 2,
 };
 struct sxcscript_token {
     const char* data;
@@ -263,15 +263,14 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                 for (int i = 0; 1; i++) {
                     if (local[i] == NULL) {
                         local[i] = parsed_itr;
-                        parsed_itr->val.literal = i;
+                        parsed_itr->val.literal = i + 1;
                         break;
                     }
                     if (sxcscript_token_eq(local[i]->token, parsed_itr->token)) {
-                        if (local[i]->val.literal != 0) {
-                            parsed_itr->val.literal = local[i]->val.literal;
-                        } else {
-                            parsed_itr->val.literal = i + 1;
+                        if (local[i]->val.literal == 0) {
+                            local[i]->val.literal = i + 1;
                         }
+                        parsed_itr->val.literal = local[i]->.literal;
                         break;
                     }
                 }
@@ -289,7 +288,7 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                     }
                 }
             }
-        } else if (parsed_itr->kind == sxcscript_kind_label || parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze ) {
+        } else if (parsed_itr->kind == sxcscript_kind_label || parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
             for (int i = 0; 1; i++) {
                 if (sxcscript->label[i].node->token == parsed_itr->token) {
                     parsed_itr->val.label_i = i;
@@ -333,7 +332,38 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_analyze(sxcscript);
     sxcscript_toinst(sxcscript);
 }
-
+void sxcscript_exec(struct sxcscript* sxcscript) {
+    int32_t* ip = &(sxcscript->mem[sxcscript_global_ip]);
+    int32_t* sp = &(sxcscript->mem[sxcscript_global_sp]);
+    int32_t* bp = &(sxcscript->mem[sxcscript_global_bp]);
+    *ip = 0;
+    *sp = 256;
+    *bp = 128;
+    while (sxcscript->inst[*ip].kind != sxcscript_kind_null) {
+        switch (sxcscript->inst[*ip].kind) {
+            case sxcscript_kind_const_get:
+                sxcscript->mem[(*sp)++] = sxcscript->inst[*ip].value;
+                break;
+            case sxcscript_kind_local_get:
+                sxcscript->mem[(*sp)++] = sxcscript->mem[*bp + sxcscript->mem[*sp - 1]];
+                break;
+            case sxcscript_kind_local_set:
+                sxcscript->mem[*bp + sxcscript->mem[*sp - 2]] = sxcscript->mem[*sp - 1];
+                *sp -= 2;
+                break;
+            case sxcscript_kind_jmp:
+                *ip = sxcscript->inst[*ip].value - 1;
+                break;
+            case sxcscript_kind_jze:
+                if (sxcscript->mem[*sp - 1] == 0) {
+                    *ip = sxcscript->inst[*ip].value - 1;
+                }
+                *sp -= 1;
+                break;
+        }
+        (*ip)++;
+    }
+}
 int main() {
     char src[sxcscript_capacity];
     static struct sxcscript sxcscript;
@@ -346,6 +376,8 @@ int main() {
     write(STDOUT_FILENO, "\n", 1);
 
     sxcscript_init(&sxcscript, src);
+
+    sxcscript_exec(&sxcscript);
 
     return 0;
 }
