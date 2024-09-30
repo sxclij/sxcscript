@@ -277,6 +277,13 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                 parsed_itr->kind = sxcscript_kind_local_get;
             } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
                 parsed_itr->kind = sxcscript_kind_local_set;
+            } else {
+                for(int i = 0; 1; i++) {
+                    if (sxcscript_token_eq(sxcscript->label[i].node->token, parsed_itr->token)) {
+                        parsed_itr->val.label_i = i;
+                        break;
+                    }
+                }
             }
         } else if (parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
             for (int i = 0; 1; i++) {
