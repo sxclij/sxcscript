@@ -311,8 +311,17 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
 }
 void sxcscript_toinst(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_itr = sxcscript->parsed;
+    struct sxcscript_inst* inst_itr = sxcscript->inst;
     while (parsed_itr->prev != NULL) {
         parsed_itr = parsed_itr->prev;
+    }
+    for(; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
+        if (parsed_itr->kind == sxcscript_kind_label) {
+            sxcscript->label[parsed_itr->val.label_i].inst_i = inst_itr - sxcscript->inst;
+        }
+        else {
+            *(inst_itr++) = (struct sxcscript_inst){parsed_itr->kind, parsed_itr->val.literal};
+        }
     }
 }
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
