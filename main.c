@@ -16,8 +16,8 @@ enum sxcscript_kind {
     sxcscript_kind_nop,
     sxcscript_kind_push,
     sxcscript_kind_label,
-    sxcscript_kind_push_val,
-    sxcscript_kind_push_var,
+    sxcscript_kind_push_const,
+    sxcscript_kind_push_local,
     sxcscript_kind_call,
     sxcscript_kind_jmp,
     sxcscript_kind_jze,
@@ -254,16 +254,16 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
         if (parsed_itr->kind == sxcscript_kind_push) {
             if ('0' <= parsed_itr->token->data[0] && parsed_itr->token->data[0] <= '9' || parsed_itr->token->data[0] == '-') {
                 parsed_itr->val.literal = sxcscript_token_to_int32(parsed_itr->token);
-                parsed_itr->kind = sxcscript_kind_push_val;
+                parsed_itr->kind = sxcscript_kind_push_const;
             } else {
-                parsed_itr->kind = sxcscript_kind_push_var;
+                parsed_itr->kind = sxcscript_kind_push_local;
             }
             *(stack_end++) = parsed_itr;
         } else if (parsed_itr->kind == sxcscript_kind_call) {
             if (sxcscript_token_eq_str(parsed_itr->token, "mov")) {
                 hs2 = sxcscript_analyze_pop(&sxcscript->free, &stack_end);
                 hs1 = sxcscript_analyze_pop(&sxcscript->free, &stack_end);
-                if (hs2->kind == sxcscript_kind_push_val) {
+                if (hs2->kind == sxcscript_kind_push_const) {
                     parsed_itr->kind = sxcscript_kind_movi;
                 }
                 parsed_itr->hs1 = hs1;
