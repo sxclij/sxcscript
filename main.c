@@ -57,6 +57,7 @@ struct sxcscript_node {
 struct sxcscript_label {
     struct sxcscript_node* node;
     int32_t arg_size;
+    int32_t inst_i;
 };
 struct sxcscript_inst {
     enum sxcscript_kind kind;
@@ -308,11 +309,18 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
     sxcscript_analyze_label(sxcscript, parsed_itr);
     sxcscript_analyze_inst(sxcscript, parsed_itr);
 }
+void sxcscript_toinst(struct sxcscript* sxcscript) {
+    struct sxcscript_node* parsed_itr = sxcscript->parsed;
+    while (parsed_itr->prev != NULL) {
+        parsed_itr = parsed_itr->prev;
+    }
+}
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_node_init(sxcscript);
     sxcscript_tokenize(src, sxcscript->token);
     sxcscript_parse(sxcscript);
     sxcscript_analyze(sxcscript);
+    sxcscript_toinst(sxcscript);
 }
 
 int main() {
