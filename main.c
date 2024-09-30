@@ -242,6 +242,13 @@ struct sxcscript_node* sxcscript_analyze_pop(struct sxcscript_node** free, struc
 }
 void sxcscript_analyze_label(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
     struct sxcscript_node* parsed_itr = parsed_begin;
+    struct sxcscript_label* label_itr = sxcscript->label;
+    for (; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
+        if (parsed_itr->kind != sxcscript_kind_label) {
+            continue;
+        }
+        *(label_itr++) = (struct sxcscript_label){parsed_itr, 0};
+    }
 }
 void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
     struct sxcscript_node* parsed_itr = parsed_begin;
@@ -273,7 +280,7 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
             }
         } else if (parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
             for (int i = 0; 1; i++) {
-                if (sxcscript->label->node->token == parsed_itr->token) {
+                if (sxcscript->label[i].node->token == parsed_itr->token) {
                     parsed_itr->val.label_i = i;
                     break;
                 }
