@@ -261,13 +261,6 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
             *(stack_end++) = parsed_itr;
         } else if (parsed_itr->kind == sxcscript_kind_call) {
             if (sxcscript_token_eq_str(parsed_itr->token, "mov")) {
-                hs2 = sxcscript_analyze_pop(&sxcscript->free, &stack_end);
-                hs1 = sxcscript_analyze_pop(&sxcscript->free, &stack_end);
-                if (hs2->kind == sxcscript_kind_push_const) {
-                    parsed_itr->kind = sxcscript_kind_movi;
-                }
-                parsed_itr->hs1 = hs1;
-                parsed_itr->hs2 = hs2;
             }
         }
     }
