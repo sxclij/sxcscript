@@ -263,14 +263,13 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                 for (int i = 0; 1; i++) {
                     if (local[i] == NULL) {
                         local[i] = parsed_itr;
-                        parsed_itr->val.literal = i + 1;
+                        if (parsed_itr->val.literal == 0) {
+                            parsed_itr->val.literal = i;
+                        }
                         break;
                     }
                     if (sxcscript_token_eq(local[i]->token, parsed_itr->token)) {
-                        if (local[i]->val.literal == 0) {
-                            local[i]->val.literal = i + 1;
-                        }
-                        parsed_itr->val.literal = local[i]->.literal;
+                        parsed_itr->val.literal = local[i]->val.literal;
                         break;
                     }
                 }
