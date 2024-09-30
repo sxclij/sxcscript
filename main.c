@@ -30,9 +30,9 @@ enum sxcscript_kind {
     sxcscript_kind_mod,
 };
 enum sxcscript_global {
-    sxcscript_global_ip = 0,
-    sxcscript_global_sp = 1,
-    sxcscript_global_bp = 2,
+    sxcscript_global_ip,
+    sxcscript_global_sp,
+    sxcscript_global_bp,
 };
 struct sxcscript_token {
     const char* data;
