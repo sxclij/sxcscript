@@ -323,6 +323,11 @@ void sxcscript_toinst(struct sxcscript* sxcscript) {
             *(inst_itr++) = (struct sxcscript_inst){parsed_itr->kind, parsed_itr->val.literal};
         }
     }
+    for(struct sxcscript_inst* inst_itr = sxcscript->inst; inst_itr < sxcscript->inst->kind != sxcscript_kind_null; inst_itr++) {
+        if(inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze) {
+            inst_itr->value = sxcscript->label[inst_itr->value].inst_i;
+        }
+    }
 }
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_node_init(sxcscript);
