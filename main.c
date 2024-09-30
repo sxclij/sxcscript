@@ -243,6 +243,7 @@ struct sxcscript_node* sxcscript_analyze_pop(struct sxcscript_node** free, struc
 void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_itr = sxcscript->parsed;
     struct sxcscript_node* local[sxcscript_buf_capacity];
+    struct sxcscript_node* label[sxcscript_buf_capacity];
     while (parsed_itr->prev != NULL) {
         parsed_itr = parsed_itr->prev;
     }
@@ -270,6 +271,18 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
                 parsed_itr->kind = sxcscript_kind_local_get;
             } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
                 parsed_itr->kind = sxcscript_kind_local_set;
+            }
+        } else if(parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
+            for (int i = 0; 1; i++) {
+                if (label[i] == NULL) {
+                    label[i] = parsed_itr;
+                    parsed_itr->val.label_i = i;
+                    break;
+                }
+                if (label[i]->token, parsed_itr->token) {
+                    parsed_itr->val.label_i = i;
+                    break;
+                }
             }
         }
     }
