@@ -256,11 +256,10 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
     struct sxcscript_node* local[sxcscript_buf_capacity];
     for (; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_push) {
+            parsed_itr->kind = sxcscript_kind_const_get;
             if ('0' <= parsed_itr->token->data[0] && parsed_itr->token->data[0] <= '9' || parsed_itr->token->data[0] == '-') {
-                parsed_itr->kind = sxcscript_kind_const_get;
                 parsed_itr->val.literal = sxcscript_token_to_int32(parsed_itr->token);
             } else {
-                parsed_itr->kind = sxcscript_kind_local_get;
                 for (int i = 0; 1; i++) {
                     if (local[i] == NULL) {
                         local[i] = parsed_itr;
@@ -271,7 +270,7 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                         if (local[i]->val.literal != 0) {
                             parsed_itr->val.literal = local[i]->val.literal;
                         } else {
-                            parsed_itr->val.literal = i+1;
+                            parsed_itr->val.literal = i + 1;
                         }
                         break;
                     }
@@ -290,7 +289,7 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                     }
                 }
             }
-        } else if (parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
+        } else if (parsed_itr->kind == sxcscript_kind_label || parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze ) {
             for (int i = 0; 1; i++) {
                 if (sxcscript->label[i].node->token == parsed_itr->token) {
                     parsed_itr->val.label_i = i;
@@ -311,20 +310,18 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
 }
 void sxcscript_toinst(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_itr = sxcscript->parsed;
-    struct sxcscript_inst* inst_itr = sxcscript->inst;
     while (parsed_itr->prev != NULL) {
         parsed_itr = parsed_itr->prev;
     }
-    for(; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
+    for (struct sxcscript_inst* inst_itr = sxcscript->inst; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_label) {
             sxcscript->label[parsed_itr->val.label_i].inst_i = inst_itr - sxcscript->inst;
-        }
-        else {
+        } else {
             *(inst_itr++) = (struct sxcscript_inst){parsed_itr->kind, parsed_itr->val.literal};
         }
     }
-    for(struct sxcscript_inst* inst_itr = sxcscript->inst; inst_itr < sxcscript->inst->kind != sxcscript_kind_null; inst_itr++) {
-        if(inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze) {
+    for (struct sxcscript_inst* inst_itr = sxcscript->inst; inst_itr->kind != sxcscript_kind_null; inst_itr++) {
+        if (inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze) {
             inst_itr->value = sxcscript->label[inst_itr->value].inst_i;
         }
     }
