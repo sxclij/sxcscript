@@ -255,7 +255,7 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
                 parsed_itr->val.literal = sxcscript_token_to_int32(parsed_itr->token);
                 parsed_itr->kind = sxcscript_kind_push_const;
             } else {
-                parsed_itr->kind = sxcscript_kind_push_local;
+                parsed_itr->kind = sxcscript_kind_local_get;
             }
             *(stack_end++) = parsed_itr;
         } else if (parsed_itr->kind == sxcscript_kind_call) {
