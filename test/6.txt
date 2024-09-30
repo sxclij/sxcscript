@@ -1,0 +1,9 @@
+(
+    a.local_set(1)
+    if(a.local_get()) (
+        b.local_set(2)
+    )
+    else (
+        b.local_set(3)
+    )
+)

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/5.txt"
+#define sxcscript_path "test/6.txt"
 #define sxcscript_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
 
