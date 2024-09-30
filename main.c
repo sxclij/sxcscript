@@ -279,6 +279,16 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                 parsed_itr->kind = sxcscript_kind_local_get;
             } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
                 parsed_itr->kind = sxcscript_kind_local_set;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "add")) {
+                parsed_itr->kind = sxcscript_kind_add;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "sub")) {
+                parsed_itr->kind = sxcscript_kind_sub;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "mul")) {
+                parsed_itr->kind = sxcscript_kind_mul;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "div")) {
+                parsed_itr->kind = sxcscript_kind_div;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "mod")) {
+                parsed_itr->kind = sxcscript_kind_mod;
             } else {
                 for (int i = 0; 1; i++) {
                     if (sxcscript_token_eq(sxcscript->label[i].node->token, parsed_itr->token)) {
@@ -349,6 +359,26 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
             case sxcscript_kind_local_set:
                 sxcscript->mem[*bp + sxcscript->mem[*sp - 2]] = sxcscript->mem[*sp - 1];
                 *sp -= 2;
+                break;
+            case sxcscript_kind_add:
+                sxcscript->mem[*sp - 2] += sxcscript->mem[*sp - 1];
+                *sp -= 1;
+                break;
+            case sxcscript_kind_sub:
+                sxcscript->mem[*sp - 2] -= sxcscript->mem[*sp - 1];
+                *sp -= 1;
+                break;
+            case sxcscript_kind_mul:
+                sxcscript->mem[*sp - 2] *= sxcscript->mem[*sp - 1];
+                *sp -= 1;
+                break;
+            case sxcscript_kind_div:
+                sxcscript->mem[*sp - 2] /= sxcscript->mem[*sp - 1];
+                *sp -= 1;
+                break;
+            case sxcscript_kind_mod:
+                sxcscript->mem[*sp - 2] %= sxcscript->mem[*sp - 1];
+                *sp -= 1;
                 break;
             case sxcscript_kind_jmp:
                 *ip = sxcscript->inst[*ip].value - 1;
