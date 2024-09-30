@@ -260,7 +260,7 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
             }
             *(stack_end++) = parsed_itr;
         } else if (parsed_itr->kind == sxcscript_kind_call) {
-            if (sxcscript_token_eq_str(parsed_itr->token, "mov")) {
+            if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
             }
         }
     }
