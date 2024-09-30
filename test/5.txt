@@ -1,5 +1,6 @@
 (
-    if(1) (
+    local_set(a, 1)
+    if(a) (
         mov(b, 2)
     )
     else (

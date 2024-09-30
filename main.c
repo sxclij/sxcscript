@@ -16,10 +16,11 @@ enum sxcscript_kind {
     sxcscript_kind_nop,
     sxcscript_kind_push,
     sxcscript_kind_label,
-    sxcscript_kind_push_const,
     sxcscript_kind_call,
     sxcscript_kind_jmp,
     sxcscript_kind_jze,
+    sxcscript_kind_const_get,
+    sxcscript_kind_const_set,
     sxcscript_kind_local_get,
     sxcscript_kind_local_set,
     sxcscript_kind_add,
@@ -241,25 +242,34 @@ struct sxcscript_node* sxcscript_analyze_pop(struct sxcscript_node** free, struc
 }
 void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_itr = sxcscript->parsed;
-    struct sxcscript_node* stack[sxcscript_buf_capacity];
-    struct sxcscript_node** stack_end = stack;
-    struct sxcscript_node* hs1;
-    struct sxcscript_node* hs2;
-    struct sxcscript_node* hs3;
+    struct sxcscript_node* local[sxcscript_buf_capacity];
     while (parsed_itr->prev != NULL) {
         parsed_itr = parsed_itr->prev;
     }
     for (; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_push) {
             if ('0' <= parsed_itr->token->data[0] && parsed_itr->token->data[0] <= '9' || parsed_itr->token->data[0] == '-') {
+                parsed_itr->kind = sxcscript_kind_const_get;
                 parsed_itr->val.literal = sxcscript_token_to_int32(parsed_itr->token);
-                parsed_itr->kind = sxcscript_kind_push_const;
             } else {
                 parsed_itr->kind = sxcscript_kind_local_get;
+                for (int i = 0; 1; i++) {
+                    if (local[i] == NULL) {
+                        local[i] = parsed_itr;
+                        parsed_itr->val.literal = i;
+                        break;
+                    }
+                    if (sxcscript_token_eq(local[i]->token, parsed_itr->token)) {
+                        parsed_itr->val.literal = i;
+                        break;
+                    }
+                }
             }
-            *(stack_end++) = parsed_itr;
         } else if (parsed_itr->kind == sxcscript_kind_call) {
-            if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
+            if (sxcscript_token_eq_str(parsed_itr->token, "local_get")) {
+                parsed_itr->kind = sxcscript_kind_local_get;
+            } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
+                parsed_itr->kind = sxcscript_kind_local_set;
             }
         }
     }
