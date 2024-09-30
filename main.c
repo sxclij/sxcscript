@@ -274,11 +274,6 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
             }
         } else if(parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
             for (int i = 0; 1; i++) {
-                if (label[i] == NULL) {
-                    label[i] = parsed_itr;
-                    parsed_itr->val.label_i = i;
-                    break;
-                }
                 if (label[i]->token, parsed_itr->token) {
                     parsed_itr->val.label_i = i;
                     break;
