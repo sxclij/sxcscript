@@ -1,9 +1,9 @@
 (
     local_set(a, 1)
-    if(a) (
-        mov(b, 2)
+    if(local_get(a)) (
+        local_set(b, 2)
     )
     else (
-        mov(b, 3)
+        local_set(b, 3)
     )
 )
