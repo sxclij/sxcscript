@@ -1,6 +1,6 @@
 (
     a.local_set(1)
-    jze(a,qawsedrftgy_if)
+    jze(a.localget(),qawsedrftgy_if)
         b.local_set(2)
         jmp(qawsedrftgy_else)
     label(qawsedrftgy_if)
