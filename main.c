@@ -201,23 +201,6 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
     } else if (sxcscript_token_eq_str(token_this, ".")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr);
-    } else if (sxcscript_token_eq_str(token_this, "if")) {
-        struct sxcscript_token* token_if = *token_itr;
-        struct sxcscript_token* token_else = NULL;
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, token_itr);
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jze, token_if);
-        sxcscript_parse_expr(sxcscript, token_itr);
-        if (sxcscript_token_eq_str(*token_itr, "else")) {
-            token_else = *token_itr;
-            (*token_itr)++;
-            sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jmp, token_else);
-            sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, token_if);
-            sxcscript_parse_expr(sxcscript, token_itr);
-            sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, token_else);
-        } else {
-            sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, token_if);
-        }
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr);
