@@ -214,10 +214,21 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
     sxcscript_parse_expr(sxcscript, &token_itr);
 }
+void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
+    for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
+        if(sxcscript_token_eq_str(parsed_itr->token, "local_get")) {
+            parsed_itr->kind = sxcscript_kind_local_get; 
+        }
+    }
+}
+void sxcscript_analyze(struct sxcscript* sxcscript) {
+    
+}
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_node_init(sxcscript);
     sxcscript_tokenize(src, sxcscript->token);
     sxcscript_parse(sxcscript);
+    sxcscript_analyze(sxcscript);
 }
 void sxcscript_exec(struct sxcscript* sxcscript) {
     int32_t* ip = &(sxcscript->mem[sxcscript_global_ip]);
