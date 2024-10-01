@@ -61,8 +61,10 @@ struct sxcscript_label {
     int32_t inst_i;
 };
 struct sxcscript_inst {
-    enum sxcscript_kind kind;
-    int32_t val;
+    union {
+        enum sxcscript_kind kind;
+        int32_t literal;
+    } val;
 };
 struct sxcscript {
     int32_t mem[sxcscript_capacity];
