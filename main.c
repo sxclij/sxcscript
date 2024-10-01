@@ -38,15 +38,16 @@ struct sxcscript_token {
     const char* data;
     int32_t size;
 };
+union sxcscript_node_val {
+    int32_t label_i;
+    struct sxcscript_node* label_break;
+    struct sxcscript_node* label_continue;
+    int32_t literal;
+};
 struct sxcscript_node {
     enum sxcscript_kind kind;
     struct sxcscript_token* token;
-    union {
-        int32_t label_i;
-        struct sxcscript_node* label_break;
-        struct sxcscript_node* label_continue;
-        int32_t literal;
-    } val;
+    union sxcscript_node_val val;
     struct sxcscript_node* hs1;
     struct sxcscript_node* hs2;
     struct sxcscript_node* hs3;
@@ -61,7 +62,7 @@ struct sxcscript_label {
 };
 struct sxcscript_inst {
     enum sxcscript_kind kind;
-    int32_t value;
+    int32_t val;
 };
 struct sxcscript {
     int32_t mem[sxcscript_capacity];
@@ -217,7 +218,7 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         } else {
             sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, token_if);
         }
-    }else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
+    } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr);
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_call, token_this);
@@ -324,7 +325,7 @@ void sxcscript_toinst(struct sxcscript* sxcscript) {
     }
     for (struct sxcscript_inst* inst_itr = sxcscript->inst; inst_itr->kind != sxcscript_kind_null; inst_itr++) {
         if (inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze) {
-            inst_itr->value = sxcscript->label[inst_itr->value].inst_i;
+            inst_itr->val = sxcscript->label[inst_itr->val].inst_i;
         }
     }
 }
@@ -345,7 +346,7 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
     while (sxcscript->inst[*ip].kind != sxcscript_kind_null) {
         switch (sxcscript->inst[*ip].kind) {
             case sxcscript_kind_const_get:
-                sxcscript->mem[(*sp)++] = sxcscript->inst[*ip].value;
+                sxcscript->mem[(*sp)++] = sxcscript->inst[*ip].val;
                 break;
             case sxcscript_kind_local_get:
                 sxcscript->mem[(*sp)++] = sxcscript->mem[*bp + sxcscript->mem[*sp - 1]];
@@ -375,11 +376,11 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 *sp -= 1;
                 break;
             case sxcscript_kind_jmp:
-                *ip = sxcscript->inst[*ip].value - 1;
+                *ip = sxcscript->inst[*ip].val - 1;
                 break;
             case sxcscript_kind_jze:
                 if (sxcscript->mem[*sp - 1] == 0) {
-                    *ip = sxcscript->inst[*ip].value - 1;
+                    *ip = sxcscript->inst[*ip].val - 1;
                 }
                 *sp -= 1;
                 break;
