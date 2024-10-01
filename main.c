@@ -205,30 +205,29 @@ void sxcscript_parse_expr(struct sxcscript_node** free, struct sxcscript_node* p
         struct sxcscript_label* label_else = (*label_itr)++;
         (*token_itr)++;
         sxcscript_parse_expr(free, parsed, token_itr, label_itr);
-        node_tmp = sxcscript_parse_push(free, parsed, sxcscript_kind_jze, NULL);
-        node_tmp->val.jmp = label_if;
+        sxcscript_parse_push(free, parsed, sxcscript_kind_jze, NULL, (union sxcscript_node_val){label_if});
         sxcscript_parse_expr(free, parsed, token_itr, label_itr);
         if (sxcscript_token_eq_str(*token_itr, "else")) {
             (*token_itr)++;
-            sxcscript_parse_push(free, parsed, sxcscript_kind_jmp, token_else);
-            sxcscript_parse_push(free, parsed, sxcscript_kind_label, token_if);
+            sxcscript_parse_push(free, parsed, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){label_else});
+            sxcscript_parse_push(free, parsed, sxcscript_kind_label, NULL, (union sxcscript_node_val){label_if});
             sxcscript_parse_expr(free, parsed, token_itr, label_itr);
-            sxcscript_parse_push(free, parsed, sxcscript_kind_label, token_else);
+            sxcscript_parse_push(free, parsed, sxcscript_kind_label, NULL, (union sxcscript_node_val){label_else});
         } else {
-            sxcscript_parse_push(free, parsed, sxcscript_kind_label, token_if);
+            sxcscript_parse_push(free, parsed, sxcscript_kind_label, NULL, (union sxcscript_node_val){label_if});
         }
     } else if (sxcscript_token_eq_str(token_this, "loop")) {
         struct sxcscript_token* token_loop = *token_itr;
         (*token_itr)++;
-        sxcscript_parse_push(free, parsed, sxcscript_kind_label, token_loop);
+        sxcscript_parse_push(free, parsed, sxcscript_kind_label, token_loop, (union sxcscript_node_val){NULL});
         sxcscript_parse_expr(free, parsed, token_itr, label_itr);
-        sxcscript_parse_push(free, parsed, sxcscript_kind_jmp, token_loop);
+        sxcscript_parse_push(free, parsed, sxcscript_kind_jmp, token_loop, (union sxcscript_node_val){NULL});
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(free, parsed, token_itr, label_itr);
-        sxcscript_parse_push(free, parsed, sxcscript_kind_call, token_this);
+        sxcscript_parse_push(free, parsed, sxcscript_kind_call, token_this , (union sxcscript_node_val){NULL});
     } else {
-        sxcscript_parse_push(free, parsed, sxcscript_kind_push, token_this);
+        sxcscript_parse_push(free, parsed, sxcscript_kind_push, token_this , (union sxcscript_node_val){NULL});
         (*token_itr)++;
     }
 }
