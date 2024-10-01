@@ -154,7 +154,6 @@ void sxcscript_node_init(struct sxcscript* sxcscript) {
     }
     sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
     sxcscript->var = sxcscript_node_alloc(&sxcscript->free);
-    sxcscript->label_size = 0;
 }
 void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
     struct sxcscript_token* token_itr = token;
@@ -201,7 +200,7 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         sxcscript_parse_expr(sxcscript, token_itr);
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_call, token_this);
     } else {
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_push, token_this);
+        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_const_get, token_this);
         (*token_itr)++;
     }
 }
@@ -229,8 +228,27 @@ void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
         struct sxcscript_token* token;
         int32_t offset;
     } local[sxcscript_buf_capacity];
-    for(struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
-        
+    int32_t offset_i = 0;
+    int32_t local_i = 0;
+    for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
+        if (parsed_itr->kind == sxcscript_kind_const_get) {
+            if ('0' <= parsed_itr->token->data[0] && parsed_itr->token->data[0] <= '9' || parsed_itr->token->data[0] == '-') {
+                parsed_itr->val.literal = sxcscript_token_to_int32(parsed_itr->token);
+                continue;
+            }
+            for (int i = 0;; i++) {
+                if (sxcscript_token_eq_str(local[i].token, parsed_itr->token)) {
+                    parsed_itr->val.literal = local[i].offset;
+                    break;
+                }
+                if (local[i].token == NULL) {
+                    local[i].token = parsed_itr->token;
+                    local[i].offset = offset_i++;
+                    parsed_itr->val.literal = local[i].offset;
+                    break;
+                }
+            }
+        }
     }
 }
 void sxcscript_analyze(struct sxcscript* sxcscript) {
