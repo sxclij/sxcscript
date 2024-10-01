@@ -48,10 +48,6 @@ struct sxcscript_node {
     enum sxcscript_kind kind;
     struct sxcscript_token* token;
     union sxcscript_node_val val;
-    struct sxcscript_node* hs1;
-    struct sxcscript_node* hs2;
-    struct sxcscript_node* hs3;
-    enum bool throug;
     struct sxcscript_node* prev;
     struct sxcscript_node* next;
 };
