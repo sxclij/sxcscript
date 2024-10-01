@@ -69,7 +69,6 @@ struct sxcscript {
     struct sxcscript_node* free;
     struct sxcscript_node* parsed;
     struct sxcscript_node* var;
-    int32_t label_size;
 };
 
 uint64_t xorshift(uint64_t* x) {
@@ -203,7 +202,6 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_call, token_this);
     } else {
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_push, token_this);
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_nop, token_this);
         (*token_itr)++;
     }
 }
@@ -226,12 +224,23 @@ void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
         }
     }
 }
+void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
+    struct {
+        struct sxcscript_token* token;
+        int32_t offset;
+    } local[sxcscript_buf_capacity];
+    for(struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
+        
+    }
+}
 void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_begin = sxcscript->parsed;
-    while(parsed_begin->prev != NULL) {
+    while (parsed_begin->prev != NULL) {
         parsed_begin = parsed_begin->prev;
     }
     sxcscript_analyze_primitive(parsed_begin);
+    sxcscript_analyze_var(parsed_begin);
+    sxcscript_analyze_toinst(sxcscript);
 }
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_node_init(sxcscript);
