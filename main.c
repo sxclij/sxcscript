@@ -237,7 +237,7 @@ void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
                 continue;
             }
             for (int i = 0;; i++) {
-                if (sxcscript_token_eq_str(local[i].token, parsed_itr->token)) {
+                if (sxcscript_token_eq(local[i].token, parsed_itr->token)) {
                     parsed_itr->val.literal = local[i].offset;
                     break;
                 }
