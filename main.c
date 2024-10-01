@@ -42,20 +42,16 @@ struct sxcscript_node {
     enum sxcscript_kind kind;
     struct sxcscript_token* token;
     union {
-        int32_t label_i;
-        struct sxcscript_node* label_break;
-        struct sxcscript_node* label_continue;
         int32_t literal;
     } val;
-    struct sxcscript_node* hs1;
-    struct sxcscript_node* hs2;
-    struct sxcscript_node* hs3;
-    enum bool throug;
     struct sxcscript_node* prev;
     struct sxcscript_node* next;
 };
 struct sxcscript_label {
-    struct sxcscript_node* node;
+    union {
+        struct sxcscript_node* fn;
+        int32_t jmp;
+    } key;
     int32_t arg_size;
     int32_t inst_i;
 };
@@ -236,11 +232,6 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
     sxcscript_parse_expr(&sxcscript->free, sxcscript->parsed, &token_itr);
 }
-struct sxcscript_node* sxcscript_analyze_pop(struct sxcscript_node** free, struct sxcscript_node*** stack_end) {
-    struct sxcscript_node* node = *(--(*stack_end));
-    node->throug = true;
-    return node;
-}
 void sxcscript_analyze_label(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
     struct sxcscript_node* parsed_itr = parsed_begin;
     struct sxcscript_label* label_itr = sxcscript->label;
@@ -291,7 +282,7 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
                 parsed_itr->kind = sxcscript_kind_mod;
             } else {
                 for (int i = 0; 1; i++) {
-                    if (sxcscript_token_eq(sxcscript->label[i].node->token, parsed_itr->token)) {
+                    if (sxcscript_token_eq(sxcscript->label[i].key.fn->token, parsed_itr->token)) {
                         parsed_itr->val.label_i = i;
                         break;
                     }
@@ -299,7 +290,7 @@ void sxcscript_analyze_inst(struct sxcscript* sxcscript, struct sxcscript_node* 
             }
         } else if (parsed_itr->kind == sxcscript_kind_label || parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
             for (int i = 0; 1; i++) {
-                if (sxcscript->label[i].node->token == parsed_itr->token) {
+                if (sxcscript->label[i].key.jmp == parsed_itr->val.label_i) {
                     parsed_itr->val.label_i = i;
                     break;
                 }
