@@ -214,8 +214,6 @@ void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
             parsed_itr->kind = sxcscript_kind_local_get;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
             parsed_itr->kind = sxcscript_kind_local_set;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "label")) {
-            parsed_itr->kind = sxcscript_kind_label;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "jmp")) {
             parsed_itr->kind = sxcscript_kind_jmp;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "jze")) {
@@ -226,7 +224,6 @@ void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
 void sxcscript_analyze_label(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_label) {
-            sxcscript->label[parsed_itr->val.literal] = (struct sxcscript_label){.inst_i = sxcscript->inst - sxcscript->inst};
         }
     }
 }
@@ -242,18 +239,6 @@ void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
             if ('0' <= parsed_itr->token->data[0] && parsed_itr->token->data[0] <= '9' || parsed_itr->token->data[0] == '-') {
                 parsed_itr->val.literal = sxcscript_token_to_int32(parsed_itr->token);
                 continue;
-            }
-            for (int i = 0;; i++) {
-                if (local[i].token == NULL) {
-                    local[i].token = parsed_itr->token;
-                    local[i].offset = offset_i++;
-                    parsed_itr->val.literal = local[i].offset;
-                    break;
-                }
-                if (sxcscript_token_eq(local[i].token, parsed_itr->token)) {
-                    parsed_itr->val.literal = local[i].offset;
-                    break;
-                }
             }
         }
     }
