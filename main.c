@@ -46,9 +46,6 @@ struct sxcscript_token {
 };
 union sxcscript_node_val {
     int32_t label_i;
-    struct sxcscript_node* label_break;
-    struct sxcscript_node* label_continue;
-    int32_t var_offset;
     int32_t literal;
 };
 struct sxcscript_node {
