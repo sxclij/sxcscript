@@ -326,46 +326,41 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_link(sxcscript);
 }
 void sxcscript_exec(struct sxcscript* sxcscript) {
-    int32_t* ip = &(sxcscript->mem[sxcscript_global_ip]);
-    int32_t* sp = &(sxcscript->mem[sxcscript_global_sp]);
-    int32_t* bp = &(sxcscript->mem[sxcscript_global_bp]);
-    *ip = 0;
-    *sp = 256;
-    *bp = 128;
-    while (sxcscript->inst[*ip].kind != sxcscript_kind_null) {
-        switch (sxcscript->inst[*ip].kind) {
+    sxcscript->mem[sxcscript_global_ip] = 0;
+    sxcscript->mem[sxcscript_global_sp] = 256;
+    sxcscript->mem[sxcscript_global_bp] = 128;
+    while (sxcscript->inst[sxcscript->mem[sxcscript_global_ip]].kind != sxcscript_kind_null) {
+        switch (sxcscript->inst[sxcscript->mem[sxcscript_global_ip]].kind) {
             case sxcscript_kind_const_get:
-                (*ip)++;
-                sxcscript->mem[(*sp)++] = sxcscript->inst[*ip].val;
+                (sxcscript->mem[sxcscript_global_ip])++;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp])++] = sxcscript->inst[sxcscript->mem[sxcscript_global_ip]].val;
                 break;
             case sxcscript_kind_const_set:
-                sxcscript->mem[sxcscript->mem[*sp - 2]] = sxcscript->mem[*sp - 1];
-                *sp -= 2;
+                sxcscript->mem[sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 2]] = sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1];
+                sxcscript->mem[sxcscript_global_sp] -= 2;
                 break;
             case sxcscript_kind_local_get:
-                sxcscript->mem[(*sp)++] = sxcscript->mem[*bp + sxcscript->mem[*sp - 1]];
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp])] = sxcscript->mem[sxcscript->mem[sxcscript_global_bp] + sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1]];
                 break;
             case sxcscript_kind_local_set:
-                sxcscript->mem[*bp + sxcscript->mem[*sp - 2]] = sxcscript->mem[*sp - 1];
-                *sp -= 2;
+                sxcscript->mem[sxcscript->mem[sxcscript_global_bp] + sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 2]] = sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1];
+                sxcscript->mem[sxcscript_global_sp] -= 2;
                 break;
             case sxcscript_kind_add:
-                sxcscript->mem[*sp - 2] += sxcscript->mem[*sp - 1];
-                *sp -= 1;
+                sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 2] += sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1];
+                sxcscript->mem[sxcscript_global_sp] -= 1;
                 break;
             case sxcscript_kind_jmp:
-                (*ip)++;
-                *ip = sxcscript->inst[*ip].val - 1;
+                sxcscript->mem[sxcscript_global_ip] = sxcscript->inst[sxcscript->mem[sxcscript_global_ip] + 1].val - 1;
                 break;
             case sxcscript_kind_jze:
-                (*ip)++;
-                if (sxcscript->mem[*sp - 1] == 0) {
-                    *ip = sxcscript->inst[*ip].val - 1;
+                if (sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1] == 0) {
+                    sxcscript->mem[sxcscript_global_ip] = sxcscript->inst[sxcscript->mem[sxcscript_global_ip] + 1].val - 1;
                 }
-                *sp -= 1;
+                sxcscript->mem[sxcscript_global_sp] -= 1;
                 break;
         }
-        (*ip)++;
+        (sxcscript->mem[sxcscript_global_ip])++;
     }
 }
 int main() {
