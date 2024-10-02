@@ -4,17 +4,27 @@ a.local_set(1664525)
 c.local_set(1013904223)
 m.local_set(2147483647)
 x.local_set(local_get(seed))
-loop (
-    x.local_set(local_get(x).mul(local_get(a)).add(local_get(c)).mod(local_get(m)))
 
+loop (
+    
     i.local_set(0)
     loop (
-        if(eq(i,10)) (
-            break
-        )
-        write(i.add(48))
-        i.local_set(i.add(1))
-    )
+        
+        if(eq(local_get(i),10)) break
 
-    usleep(10000)
+        x.local_set(local_get(x).mul(local_get(a)).add(local_get(c)).mod(local_get(m)))
+        
+        write(
+            if(lt(local_get(x), 0)) (
+                local_get(x).mul(-1).mod(10).add(48)
+            ) else (
+                local_get(x).mod(10).add(48)
+            )
+        )
+        
+        i.local_set(local_get(i).add(1))
+    )
+    write(10)
+
+    usleep(1000000)
 )
