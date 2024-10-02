@@ -73,7 +73,6 @@ struct sxcscript {
     struct sxcscript_node* free;
     struct sxcscript_node* parsed;
     int32_t label_size;
-    int32_t inst_size;
 };
 
 uint64_t xorshift(uint64_t* x) {
@@ -328,7 +327,6 @@ void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node
             *(inst_itr++) = (union sxcscript_inst){.kind = parsed_itr->kind};
         }
     }
-    sxcscript->inst_size = inst_itr - sxcscript->inst;
 }
 void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_begin = sxcscript->parsed;
