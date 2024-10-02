@@ -72,7 +72,6 @@ struct sxcscript {
     struct sxcscript_label label[sxcscript_capacity];
     struct sxcscript_node* free;
     struct sxcscript_node* parsed;
-    struct sxcscript_node* var;
     int32_t label_size;
     int32_t inst_size;
 };
@@ -162,7 +161,6 @@ void sxcscript_node_init(struct sxcscript* sxcscript) {
         sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
     }
     sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
-    sxcscript->var = sxcscript_node_alloc(&sxcscript->free);
     sxcscript->label_size = 0;
 }
 void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
