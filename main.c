@@ -1,6 +1,5 @@
 #include <fcntl.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #define sxcscript_path "test/8.txt"
@@ -23,8 +22,6 @@ enum sxcscript_kind {
     sxcscript_kind_const_set,
     sxcscript_kind_local_get,
     sxcscript_kind_local_set,
-    sxcscript_kind_read,
-    sxcscript_kind_write,
     sxcscript_kind_add,
     sxcscript_kind_sub,
     sxcscript_kind_mul,
@@ -34,6 +31,9 @@ enum sxcscript_kind {
     sxcscript_kind_and,
     sxcscript_kind_eq,
     sxcscript_kind_lt,
+    sxcscript_kind_read,
+    sxcscript_kind_write,
+    sxcscript_kind_usleep,
 };
 enum sxcscript_global {
     sxcscript_global_ip,
@@ -257,10 +257,6 @@ void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
             parsed_itr->kind = sxcscript_kind_local_get;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
             parsed_itr->kind = sxcscript_kind_local_set;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "read")) {
-            parsed_itr->kind = sxcscript_kind_read;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "write")) {
-            parsed_itr->kind = sxcscript_kind_write;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "add")) {
             parsed_itr->kind = sxcscript_kind_add;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "sub")) {
@@ -279,6 +275,12 @@ void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
             parsed_itr->kind = sxcscript_kind_eq;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "lt")) {
             parsed_itr->kind = sxcscript_kind_lt;
+        } else if (sxcscript_token_eq_str(parsed_itr->token, "read")) {
+            parsed_itr->kind = sxcscript_kind_read;
+        } else if (sxcscript_token_eq_str(parsed_itr->token, "write")) {
+            parsed_itr->kind = sxcscript_kind_write;
+        } else if (sxcscript_token_eq_str(parsed_itr->token, "usleep")) {
+            parsed_itr->kind = sxcscript_kind_usleep;
         }
     }
 }
@@ -366,15 +368,11 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 sxcscript->mem[sxcscript_global_sp] -= 2;
                 break;
             case sxcscript_kind_local_get:
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp])] = sxcscript->mem[sxcscript->mem[sxcscript_global_bp] + sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1]];
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp] - 1)] = sxcscript->mem[sxcscript->mem[sxcscript_global_bp] + sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1]];
                 break;
             case sxcscript_kind_local_set:
                 sxcscript->mem[sxcscript->mem[sxcscript_global_bp] + sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 2]] = sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1];
                 sxcscript->mem[sxcscript_global_sp] -= 2;
-                break;
-            case sxcscript_kind_write:
-                write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1], 1);
-                sxcscript->mem[sxcscript_global_sp] -= 1;
                 break;
             case sxcscript_kind_add:
                 sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 2] += sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1];
@@ -418,6 +416,14 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 if (sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1] == 0) {
                     sxcscript->mem[sxcscript_global_ip] = sxcscript->inst[sxcscript->mem[sxcscript_global_ip] + 1].val - 1;
                 }
+                sxcscript->mem[sxcscript_global_sp] -= 1;
+                break;
+            case sxcscript_kind_write:
+                write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp] - 1], 1);
+                sxcscript->mem[sxcscript_global_sp] -= 1;
+                break;
+            case sxcscript_kind_usleep:
+                usleep(sxcscript->inst[sxcscript->mem[sxcscript_global_sp] - 1].val);
                 sxcscript->mem[sxcscript_global_sp] -= 1;
                 break;
         }
