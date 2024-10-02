@@ -1,0 +1,13 @@
+(
+    seed.local_set(114514)
+    a.local_set(1664525)
+    c.local_set(1013904223)
+    m.local_set(2147483647)
+    x.local_set(local_get(seed))
+    loop (
+        x.local_set(mul(local_get(x),local_get(a)))
+        x.local_set(add(local_get(x),local_get(c)))
+        x.local_set(mod(local_get(x),local_get(m)))
+        usleep(10000)
+    )
+)
