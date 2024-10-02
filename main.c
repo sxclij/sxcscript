@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/7.txt"
+#define sxcscript_path "test/6.txt"
 #define sxcscript_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
 
@@ -229,7 +229,9 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
 }
 void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
-        if (sxcscript_token_eq_str(parsed_itr->token, "local_get")) {
+        if(parsed_itr->token == NULL) {
+            continue;
+        } else if (sxcscript_token_eq_str(parsed_itr->token, "local_get")) {
             parsed_itr->kind = sxcscript_kind_local_get;
         } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
             parsed_itr->kind = sxcscript_kind_local_set;
@@ -267,11 +269,10 @@ void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node
         } else if (parsed_itr->kind == sxcscript_kind_const_get) {
             *(inst_itr++) = (union sxcscript_inst){.kind = parsed_itr->kind};
             *(inst_itr++) = (union sxcscript_inst){.val = parsed_itr->val.literal};
-        } else if(parsed_itr->kind == sxcscript_kind_jmp) {
+        } else if (parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
             *(inst_itr++) = (union sxcscript_inst){.kind = parsed_itr->kind};
             *(inst_itr++) = (union sxcscript_inst){.val = sxcscript->label[parsed_itr->val.label_i].inst_i};
-        }
-        else {
+        } else {
             *(inst_itr++) = (union sxcscript_inst){.kind = parsed_itr->kind};
         }
     }
@@ -313,14 +314,15 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 *sp -= 2;
                 break;
             case sxcscript_kind_jmp:
-                *ip = sxcscript->mem[*sp - 1];
-                *sp -= 1;
+                (*ip)++;
+                *ip = sxcscript->inst[*ip].val;
                 break;
             case sxcscript_kind_jze:
-                if (sxcscript->mem[*sp - 2] == 0) {
-                    *ip = sxcscript->mem[*sp - 1];
+                (*ip)++;
+                if (sxcscript->mem[*sp - 1] == 0) {
+                    *ip = sxcscript->inst[*ip].val;
                 }
-                *sp -= 2;
+                *sp -= 1;
                 break;
         }
         (*ip)++;
