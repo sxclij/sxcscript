@@ -97,6 +97,9 @@ enum bool sxcscript_token_eq_str(struct sxcscript_token* a, const char* b) {
             return false;
         }
     }
+    if (b[a->size] != '\0') {
+        return false;
+    }
     return true;
 }
 int32_t sxcscript_token_to_int32(struct sxcscript_token* token) {
@@ -352,12 +355,12 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 break;
             case sxcscript_kind_jmp:
                 (*ip)++;
-                *ip = sxcscript->inst[*ip].val;
+                *ip = sxcscript->inst[*ip].val - 1;
                 break;
             case sxcscript_kind_jze:
                 (*ip)++;
                 if (sxcscript->mem[*sp - 1] == 0) {
-                    *ip = sxcscript->inst[*ip].val;
+                    *ip = sxcscript->inst[*ip].val - 1;
                 }
                 *sp -= 1;
                 break;
