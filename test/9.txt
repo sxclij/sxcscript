@@ -5,9 +5,7 @@
     m.local_set(2147483647)
     x.local_set(local_get(seed))
     loop (
-        x.local_set(mul(local_get(x),local_get(a)))
-        x.local_set(add(local_get(x),local_get(c)))
-        x.local_set(mod(local_get(x),local_get(m)))
+        x.local_set(local_get(x).mul(local_get(a)).add(local_get(c)).mod(local_get(m)))
         usleep(10000)
     )
 )
