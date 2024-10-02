@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/9.txt"
+#define sxcscript_path "test/10.txt"
 #define sxcscript_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
 
@@ -233,8 +233,10 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = start_i});
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = end_i});
     } else if (sxcscript_token_eq_str(token_this, "break")) {
+        (*token_itr)++;
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = break_i});
     } else if (sxcscript_token_eq_str(token_this, "continue")) {
+        (*token_itr)++;
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = continue_i});
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
@@ -247,7 +249,9 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
 }
 void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
-    sxcscript_parse_expr(sxcscript, &token_itr, -1, -1);
+    while (token_itr->size != 0) {
+        sxcscript_parse_expr(sxcscript, &token_itr, -1, -1);
+    }
 }
 void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
