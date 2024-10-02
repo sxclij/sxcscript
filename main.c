@@ -238,12 +238,6 @@ void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
         }
     }
 }
-void sxcscript_analyze_label(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
-    for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
-        if (parsed_itr->kind == sxcscript_kind_label) {
-        }
-    }
-}
 void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
     struct {
         struct sxcscript_token* token;
@@ -262,7 +256,6 @@ void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
 }
 void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
     union sxcscript_inst* inst_itr = sxcscript->inst;
-    struct sxcscript_label* label_itr = sxcscript->label;
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_label) {
             sxcscript->label[parsed_itr->val.label_i].inst_i = inst_itr - sxcscript->inst;
@@ -271,7 +264,8 @@ void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node
             *(inst_itr++) = (union sxcscript_inst){.val = parsed_itr->val.literal};
         } else if (parsed_itr->kind == sxcscript_kind_jmp || parsed_itr->kind == sxcscript_kind_jze) {
             *(inst_itr++) = (union sxcscript_inst){.kind = parsed_itr->kind};
-            *(inst_itr++) = (union sxcscript_inst){.val = sxcscript->label[parsed_itr->val.label_i].inst_i};
+            *(inst_itr++) = (union sxcscript_inst){.val = parsed_itr->val.label_i};
+            continue;
         } else {
             *(inst_itr++) = (union sxcscript_inst){.kind = parsed_itr->kind};
         }
@@ -283,7 +277,6 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
         parsed_begin = parsed_begin->prev;
     }
     sxcscript_analyze_primitive(parsed_begin);
-    sxcscript_analyze_label(sxcscript, parsed_begin);
     sxcscript_analyze_var(parsed_begin);
     sxcscript_analyze_toinst(sxcscript, parsed_begin);
 }
