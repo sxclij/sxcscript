@@ -439,8 +439,6 @@ int main() {
     int src_n = read(fd, src, sizeof(src) - 1);
     src[src_n] = '\0';
     close(fd);
-    write(STDOUT_FILENO, src, src_n);
-    write(STDOUT_FILENO, "\n", 1);
 
     sxcscript_init(&sxcscript, src);
 
