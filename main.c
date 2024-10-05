@@ -15,7 +15,6 @@ enum sxcscript_kind {
     sxcscript_kind_nop,
     sxcscript_kind_push,
     sxcscript_kind_label,
-    sxcscript_kind_label_localclear,
     sxcscript_kind_call,
     sxcscript_kind_jmp,
     sxcscript_kind_jze,
