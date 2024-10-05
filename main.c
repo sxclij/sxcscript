@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/11.txt"
+#define sxcscript_path "test/10.txt"
 #define sxcscript_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
 
@@ -188,17 +188,6 @@ void sxcscript_parse_push(struct sxcscript_node** free, struct sxcscript_node* p
     struct sxcscript_node* node = sxcscript_node_insert(free, parsed);
     *node = (struct sxcscript_node){.kind = kind, .token = token, .val = val, .prev = node->prev, .next = node->next};
 }
-void sxcscript_parse_fn(struct sxcscript* sxcscript, int32_t fn_label, struct sxcscript_token* fn_token) {
-    int32_t arg_n = 0;
-    struct sxcscript_node* node_itr = sxcscript->parsed->prev;
-    while (node_itr->kind == sxcscript_kind_const_get) {
-        arg_n++;
-        node_itr->val.literal = -arg_n-2;
-        node_itr = node_itr->prev;
-    }
-    sxcscript->label[fn_label].token = fn_token;
-    sxcscript->label[fn_label].arg_size = arg_n;
-}
 void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** token_itr, int break_i, int continue_i) {
     struct sxcscript_token* token_this = *token_itr;
     struct sxcscript_node* node_this = sxcscript->parsed;
@@ -244,19 +233,6 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
     } else if (sxcscript_token_eq_str(token_this, "continue")) {
         (*token_itr)++;
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = continue_i});
-    } else if (sxcscript_token_eq_str(token_this, "fn")) {
-        (*token_itr)++;
-        int32_t fn_label = sxcscript->label_size++;
-        struct sxcscript_token* fn_token = (*token_itr)++;
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_nop, NULL, (union sxcscript_node_val){0});
-        sxcscript_parse_expr(sxcscript, token_itr, break_i, continue_i);
-        sxcscript_parse_fn(sxcscript, fn_label, fn_token);
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, fn_token, (union sxcscript_node_val){.label_i = fn_label});
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label_localclear, NULL, (union sxcscript_node_val){0});
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
-        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
-        sxcscript_parse_expr(sxcscript, token_itr, break_i, continue_i);
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, break_i, continue_i);
