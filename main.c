@@ -434,16 +434,19 @@ void sxcscript_exec(union sxcscript_mem* mem) {
     }
 }
 int main() {
-    char src[sxcscript_compile_capacity];
     static union sxcscript_mem mem[sxcscript_mem_capacity];
-    static struct sxcscript sxcscript;
+    char* src = (char*)malloc(sxcscript_compile_capacity);
+    struct sxcscript* sxcscript = (struct sxcscript*)malloc(sizeof(struct sxcscript));
 
     int fd = open(sxcscript_path, O_RDONLY);
     int src_n = read(fd, src, sizeof(src) - 1);
     src[src_n] = '\0';
     close(fd);
 
-    sxcscript_compile(mem, &sxcscript, src);
+    sxcscript_compile(mem, sxcscript, src);
+
+    free(src);
+    free(sxcscript);
 
     sxcscript_exec(mem);
 
