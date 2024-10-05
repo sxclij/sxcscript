@@ -252,6 +252,10 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
         sxcscript_parse_expr(sxcscript, token_itr, break_i, continue_i);
         sxcscript_parse_fn(sxcscript, fn_label, fn_token);
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label, fn_token, (union sxcscript_node_val){.label_i = fn_label});
+        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_label_localclear, NULL, (union sxcscript_node_val){0});
+        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
+        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
+        sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
         sxcscript_parse_expr(sxcscript, token_itr, break_i, continue_i);
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
