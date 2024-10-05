@@ -6,7 +6,8 @@
 #define sxcscript_mem_capacity (1 << 20)
 #define sxcscript_compile_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
-#define sxcscript_global_capacity (1 << 8)
+#define sxcscript_global_size (1 << 8)
+#define sxcscript_stack_size (1 << 8)
 
 enum bool {
     false = 0,
@@ -163,7 +164,7 @@ void sxcscript_node_init(struct sxcscript* sxcscript) {
         sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
     }
     sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
-    sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
+    sxcscript->inst_begin = sxcscript->mem + sxcscript_global_size;
     sxcscript->label_size = 0;
 }
 void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
@@ -352,92 +353,93 @@ void sxcscript_link(struct sxcscript* sxcscript) {
         }
     }
 }
-void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
+void sxcscript_init(struct sxcscript* sxcscript, union sxcscript_mem* mem, const char* src) {
     sxcscript_node_init(sxcscript);
     sxcscript_tokenize(src, sxcscript->token);
     sxcscript_parse(sxcscript);
     sxcscript_analyze(sxcscript);
     sxcscript_link(sxcscript);
+    mem[sxcscript_global_ip].val = sxcscript->inst_begin - mem;
+    mem[sxcscript_global_sp].val = sxcscript->data_begin - mem;
+    mem[sxcscript_global_bp].val = sxcscript->data_begin - mem + sxcscript_stack_size;
 }
-void sxcscript_exec(struct sxcscript* sxcscript) {
-    sxcscript->mem[sxcscript_global_ip].val = sxcscript->inst_begin - sxcscript->mem;
-    sxcscript->mem[sxcscript_global_sp].val = sxcscript->data_begin - sxcscript->mem;
-    sxcscript->mem[sxcscript_global_bp].val = sxcscript->data_begin - sxcscript->mem + 256;
-    while (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
-        switch (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind) {
+void sxcscript_exec(union sxcscript_mem* mem) {
+    while (mem[mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
+        switch (mem[mem[sxcscript_global_ip].val].kind) {
             case sxcscript_kind_const_get:
-                (sxcscript->mem[sxcscript_global_ip].val)++;
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].val;
+                (mem[sxcscript_global_ip].val)++;
+                mem[(mem[sxcscript_global_sp].val)++].val = mem[mem[sxcscript_global_ip].val].val;
                 break;
             case sxcscript_kind_const_set:
-                sxcscript->mem[sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val].val = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 2;
+                mem[mem[mem[sxcscript_global_sp].val - 2].val].val = mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 2;
                 break;
             case sxcscript_kind_local_get:
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val - 1)].val = sxcscript->mem[sxcscript->mem[sxcscript_global_bp].val + sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val].val;
+                mem[(mem[sxcscript_global_sp].val - 1)].val = mem[mem[sxcscript_global_bp].val + mem[mem[sxcscript_global_sp].val - 1].val].val;
                 break;
             case sxcscript_kind_local_set:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_bp].val + sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val].val = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 2;
+                mem[mem[sxcscript_global_bp].val + mem[mem[sxcscript_global_sp].val - 2].val].val = mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 2;
                 break;
             case sxcscript_kind_add:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val += sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val += mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_sub:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val -= sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val -= mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_mul:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val *= sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val *= mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_div:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val /= sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val /= mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_mod:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val %= sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val %= mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_not:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val = !sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
+                mem[mem[sxcscript_global_sp].val - 1].val = !mem[mem[sxcscript_global_sp].val - 1].val;
                 break;
             case sxcscript_kind_and:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val &= sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val &= mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_eq:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val == sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val = mem[mem[sxcscript_global_sp].val - 2].val == mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_lt:
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val < sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[mem[sxcscript_global_sp].val - 2].val = mem[mem[sxcscript_global_sp].val - 2].val < mem[mem[sxcscript_global_sp].val - 1].val;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_jmp:
-                sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val + 1].val - 1;
+                mem[sxcscript_global_ip].val = mem[mem[sxcscript_global_ip].val + 1].val - 1;
                 break;
             case sxcscript_kind_jze:
-                if (sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val == 0) {
-                    sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val + 1].val - 1;
+                if (mem[mem[sxcscript_global_sp].val - 1].val == 0) {
+                    mem[sxcscript_global_ip].val = mem[mem[sxcscript_global_ip].val + 1].val - 1;
                 }
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_write:
-                write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val, 1);
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                write(STDOUT_FILENO, &mem[mem[sxcscript_global_sp].val - 1].val, 1);
+                mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_usleep:
-                usleep(sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val);
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                usleep(mem[mem[sxcscript_global_sp].val - 1].val);
+                mem[sxcscript_global_sp].val -= 1;
                 break;
         }
-        (sxcscript->mem[sxcscript_global_ip].val)++;
+        (mem[sxcscript_global_ip].val)++;
     }
 }
 int main() {
     char src[sxcscript_compile_capacity];
+    static union sxcscript_mem mem[sxcscript_mem_capacity];
     static struct sxcscript sxcscript;
 
     int fd = open(sxcscript_path, O_RDONLY);
@@ -445,9 +447,9 @@ int main() {
     src[src_n] = '\0';
     close(fd);
 
-    sxcscript_init(&sxcscript, src);
+    sxcscript_init(&sxcscript,mem, src);
 
-    sxcscript_exec(&sxcscript);
+    sxcscript_exec(sxcscript.mem);
 
     return 0;
 }
