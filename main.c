@@ -68,7 +68,6 @@ union sxcscript_mem {
     int32_t val;
 };
 struct sxcscript {
-    union sxcscript_mem mem[sxcscript_mem_capacity];
     struct sxcscript_token token[sxcscript_compile_capacity];
     struct sxcscript_node node[sxcscript_compile_capacity];
     struct sxcscript_label label[sxcscript_compile_capacity];
@@ -156,16 +155,6 @@ int32_t sxcscript_node_left(struct sxcscript_node* node) {
         ret++;
     }
     return ret;
-}
-void sxcscript_node_init(struct sxcscript* sxcscript) {
-    sxcscript->free = sxcscript->node;
-    *(sxcscript->free) = (struct sxcscript_node){.prev = NULL, .next = NULL};
-    for (int i = 1; i < sxcscript_compile_capacity; i++) {
-        sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
-    }
-    sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
-    sxcscript->inst_begin = sxcscript->mem + sxcscript_global_size;
-    sxcscript->label_size = 0;
 }
 void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
     struct sxcscript_token* token_itr = token;
@@ -317,11 +306,11 @@ void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
         }
     }
 }
-void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
+void sxcscript_analyze_toinst(struct sxcscript* sxcscript, union sxcscript_mem* mem, struct sxcscript_node* parsed_begin) {
     union sxcscript_mem* inst_itr = sxcscript->inst_begin;
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_label) {
-            sxcscript->label[parsed_itr->val.label_i].inst_i = inst_itr - sxcscript->mem;
+            sxcscript->label[parsed_itr->val.label_i].inst_i = inst_itr - mem;
         } else if (parsed_itr->kind == sxcscript_kind_const_get) {
             *(inst_itr++) = (union sxcscript_mem){.kind = parsed_itr->kind};
             *(inst_itr++) = (union sxcscript_mem){.val = parsed_itr->val.literal};
@@ -334,14 +323,14 @@ void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node
     }
     sxcscript->data_begin = inst_itr;
 }
-void sxcscript_analyze(struct sxcscript* sxcscript) {
+void sxcscript_analyze(struct sxcscript* sxcscript, union sxcscript_mem* mem) {
     struct sxcscript_node* parsed_begin = sxcscript->parsed;
     while (parsed_begin->prev != NULL) {
         parsed_begin = parsed_begin->prev;
     }
     sxcscript_analyze_primitive(parsed_begin);
     sxcscript_analyze_var(parsed_begin);
-    sxcscript_analyze_toinst(sxcscript, parsed_begin);
+    sxcscript_analyze_toinst(sxcscript, mem, parsed_begin);
 }
 void sxcscript_link(struct sxcscript* sxcscript) {
     for (union sxcscript_mem* inst_itr = sxcscript->inst_begin; inst_itr->kind != sxcscript_kind_null; inst_itr++) {
@@ -353,11 +342,18 @@ void sxcscript_link(struct sxcscript* sxcscript) {
         }
     }
 }
-void sxcscript_init(struct sxcscript* sxcscript, union sxcscript_mem* mem, const char* src) {
-    sxcscript_node_init(sxcscript);
+void sxcscript_compile(union sxcscript_mem* mem, struct sxcscript* sxcscript, const char* src) {
+    sxcscript->free = sxcscript->node;
+    *(sxcscript->free) = (struct sxcscript_node){.prev = NULL, .next = NULL};
+    for (int i = 1; i < sxcscript_compile_capacity; i++) {
+        sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
+    }
+    sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
+    sxcscript->inst_begin = mem + sxcscript_global_size;
+    sxcscript->label_size = 0;
     sxcscript_tokenize(src, sxcscript->token);
     sxcscript_parse(sxcscript);
-    sxcscript_analyze(sxcscript);
+    sxcscript_analyze(sxcscript, mem);
     sxcscript_link(sxcscript);
     mem[sxcscript_global_ip].val = sxcscript->inst_begin - mem;
     mem[sxcscript_global_sp].val = sxcscript->data_begin - mem;
@@ -447,9 +443,9 @@ int main() {
     src[src_n] = '\0';
     close(fd);
 
-    sxcscript_init(&sxcscript,mem, src);
+    sxcscript_compile(mem, &sxcscript, src);
 
-    sxcscript_exec(sxcscript.mem);
+    sxcscript_exec(mem);
 
     return 0;
 }
