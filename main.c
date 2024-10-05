@@ -3,7 +3,8 @@
 #include <unistd.h>
 
 #define sxcscript_path "test/10.txt"
-#define sxcscript_capacity (1 << 16)
+#define sxcscript_mem_capacity (1 << 20)
+#define sxcscript_compile_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
 #define sxcscript_global_capacity (1 << 8)
 
@@ -66,10 +67,10 @@ union sxcscript_mem {
     int32_t val;
 };
 struct sxcscript {
-    union sxcscript_mem mem[sxcscript_capacity];
-    struct sxcscript_token token[sxcscript_capacity];
-    struct sxcscript_node node[sxcscript_capacity];
-    struct sxcscript_label label[sxcscript_capacity];
+    union sxcscript_mem mem[sxcscript_mem_capacity];
+    struct sxcscript_token token[sxcscript_compile_capacity];
+    struct sxcscript_node node[sxcscript_compile_capacity];
+    struct sxcscript_label label[sxcscript_compile_capacity];
     struct sxcscript_node* free;
     struct sxcscript_node* parsed;
     union sxcscript_mem* inst_begin;
@@ -158,7 +159,7 @@ int32_t sxcscript_node_left(struct sxcscript_node* node) {
 void sxcscript_node_init(struct sxcscript* sxcscript) {
     sxcscript->free = sxcscript->node;
     *(sxcscript->free) = (struct sxcscript_node){.prev = NULL, .next = NULL};
-    for (int i = 1; i < sxcscript_capacity; i++) {
+    for (int i = 1; i < sxcscript_compile_capacity; i++) {
         sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
     }
     sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
@@ -361,7 +362,7 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
 void sxcscript_exec(struct sxcscript* sxcscript) {
     sxcscript->mem[sxcscript_global_ip].val = sxcscript->inst_begin - sxcscript->mem;
     sxcscript->mem[sxcscript_global_sp].val = sxcscript->data_begin - sxcscript->mem;
-    sxcscript->mem[sxcscript_global_bp].val = sxcscript->data_begin - sxcscript->mem + 128;
+    sxcscript->mem[sxcscript_global_bp].val = sxcscript->data_begin - sxcscript->mem + 256;
     while (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
         switch (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind) {
             case sxcscript_kind_const_get:
@@ -436,7 +437,7 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
     }
 }
 int main() {
-    char src[sxcscript_capacity];
+    char src[sxcscript_compile_capacity];
     static struct sxcscript sxcscript;
 
     int fd = open(sxcscript_path, O_RDONLY);
