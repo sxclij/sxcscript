@@ -5,6 +5,7 @@
 #define sxcscript_path "test/10.txt"
 #define sxcscript_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
+#define sxcscript_global_capacity (1 << 8)
 
 enum bool {
     false = 0,
@@ -71,8 +72,9 @@ struct sxcscript {
     struct sxcscript_label label[sxcscript_capacity];
     struct sxcscript_node* free;
     struct sxcscript_node* parsed;
+    union sxcscript_mem* inst_begin;
+    union sxcscript_mem* data_begin;
     int32_t label_size;
-    int32_t inst_size;
 };
 
 uint64_t xorshift(uint64_t* x) {
@@ -160,6 +162,7 @@ void sxcscript_node_init(struct sxcscript* sxcscript) {
         sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
     }
     sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
+    sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
     sxcscript->label_size = 0;
 }
 void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
@@ -313,7 +316,7 @@ void sxcscript_analyze_var(struct sxcscript_node* parsed_begin) {
     }
 }
 void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node* parsed_begin) {
-    union sxcscript_mem* inst_itr = sxcscript->mem;
+    union sxcscript_mem* inst_itr = sxcscript->inst_begin;
     for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr != NULL; parsed_itr = parsed_itr->next) {
         if (parsed_itr->kind == sxcscript_kind_label) {
             sxcscript->label[parsed_itr->val.label_i].inst_i = inst_itr - sxcscript->mem;
@@ -327,7 +330,7 @@ void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node
             *(inst_itr++) = (union sxcscript_mem){.kind = parsed_itr->kind};
         }
     }
-    sxcscript->inst_size = inst_itr - sxcscript->mem;
+    sxcscript->data_begin = inst_itr;
 }
 void sxcscript_analyze(struct sxcscript* sxcscript) {
     struct sxcscript_node* parsed_begin = sxcscript->parsed;
@@ -339,7 +342,7 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
     sxcscript_analyze_toinst(sxcscript, parsed_begin);
 }
 void sxcscript_link(struct sxcscript* sxcscript) {
-    for (union sxcscript_mem* inst_itr = sxcscript->mem; inst_itr->kind != sxcscript_kind_null; inst_itr++) {
+    for (union sxcscript_mem* inst_itr = sxcscript->inst_begin; inst_itr->kind != sxcscript_kind_null; inst_itr++) {
         if (inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze) {
             inst_itr += 1;
             inst_itr->val = sxcscript->label[inst_itr->val].inst_i;
@@ -356,9 +359,9 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_link(sxcscript);
 }
 void sxcscript_exec(struct sxcscript* sxcscript) {
-    sxcscript->mem[sxcscript_global_ip].val = 0;
-    sxcscript->mem[sxcscript_global_sp].val = sxcscript->inst_size + 128;
-    sxcscript->mem[sxcscript_global_bp].val = sxcscript->inst_size;
+    sxcscript->mem[sxcscript_global_ip].val = sxcscript->inst_begin - sxcscript->mem;
+    sxcscript->mem[sxcscript_global_sp].val = sxcscript->data_begin - sxcscript->mem;
+    sxcscript->mem[sxcscript_global_bp].val = sxcscript->data_begin - sxcscript->mem + 128;
     while (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
         switch (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind) {
             case sxcscript_kind_const_get:
