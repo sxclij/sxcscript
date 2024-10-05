@@ -187,6 +187,8 @@ void sxcscript_parse_push(struct sxcscript_node** free, struct sxcscript_node* p
     struct sxcscript_node* node = sxcscript_node_insert(free, parsed);
     *node = (struct sxcscript_node){.kind = kind, .token = token, .val = val, .prev = node->prev, .next = node->next};
 }
+void sxcscript_parse_fn(struct sxcscript* sxcscript, struct sxcscript_token** token_itr, int break_i, int continue_i) {
+}
 void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** token_itr, int break_i, int continue_i) {
     struct sxcscript_token* token_this = *token_itr;
     struct sxcscript_node* node_this = sxcscript->parsed;
@@ -232,6 +234,8 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
     } else if (sxcscript_token_eq_str(token_this, "continue")) {
         (*token_itr)++;
         sxcscript_parse_push(&sxcscript->free, sxcscript->parsed, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = continue_i});
+    } else if (sxcscript_token_eq_str(token_this, "fn")) {
+        sxcscript_parse_fn(sxcscript, token_itr, break_i, continue_i);
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, break_i, continue_i);

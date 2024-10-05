@@ -3,7 +3,7 @@ a.local_set(1664525)
 c.local_set(1013904223)
 m.local_set(2147483647)
 x.local_set(local_get(seed))
-loop (a
+loop (
     i.local_set(0)
     loop (
         if(eq(local_get(i),10)) break
