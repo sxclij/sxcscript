@@ -358,11 +358,11 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript_parse(sxcscript);
     sxcscript_analyze(sxcscript);
     sxcscript_link(sxcscript);
-}
-void sxcscript_exec(struct sxcscript* sxcscript) {
     sxcscript->mem[sxcscript_global_ip].val = sxcscript->inst_begin - sxcscript->mem;
     sxcscript->mem[sxcscript_global_sp].val = sxcscript->data_begin - sxcscript->mem;
     sxcscript->mem[sxcscript_global_bp].val = sxcscript->data_begin - sxcscript->mem + 256;
+}
+void sxcscript_exec(struct sxcscript* sxcscript) {
     while (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
         switch (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind) {
             case sxcscript_kind_const_get:
