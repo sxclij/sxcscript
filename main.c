@@ -196,42 +196,42 @@ void sxcscript_parse(struct sxcscript* sxcscript) {
         sxcscript_parse_expr(sxcscript, &node_itr, &token_itr, -1, -1);
     }
 }
-void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
-    for (struct sxcscript_node* parsed_itr = parsed_begin; parsed_itr->kind != sxcscript_kind_null; parsed_itr = parsed_itr->next) {
-        if (parsed_itr->token == NULL) {
+void sxcscript_analyze_primitive(struct sxcscript_node* node_begin) {
+    for (struct sxcscript_node* node_itr = node_begin; node_itr->kind != sxcscript_kind_null; node_itr++) {
+        if (node_itr->token == NULL) {
             continue;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "const_get")) {
-            parsed_itr->kind = sxcscript_kind_const_get;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "const_set")) {
-            parsed_itr->kind = sxcscript_kind_const_set;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "local_get")) {
-            parsed_itr->kind = sxcscript_kind_local_get;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "local_set")) {
-            parsed_itr->kind = sxcscript_kind_local_set;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "add")) {
-            parsed_itr->kind = sxcscript_kind_add;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "sub")) {
-            parsed_itr->kind = sxcscript_kind_sub;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "mul")) {
-            parsed_itr->kind = sxcscript_kind_mul;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "div")) {
-            parsed_itr->kind = sxcscript_kind_div;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "mod")) {
-            parsed_itr->kind = sxcscript_kind_mod;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "not")) {
-            parsed_itr->kind = sxcscript_kind_not;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "and")) {
-            parsed_itr->kind = sxcscript_kind_and;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "eq")) {
-            parsed_itr->kind = sxcscript_kind_eq;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "lt")) {
-            parsed_itr->kind = sxcscript_kind_lt;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "read")) {
-            parsed_itr->kind = sxcscript_kind_read;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "write")) {
-            parsed_itr->kind = sxcscript_kind_write;
-        } else if (sxcscript_token_eq_str(parsed_itr->token, "usleep")) {
-            parsed_itr->kind = sxcscript_kind_usleep;
+        } else if (sxcscript_token_eq_str(node_itr->token, "const_get")) {
+            node_itr->kind = sxcscript_kind_const_get;
+        } else if (sxcscript_token_eq_str(node_itr->token, "const_set")) {
+            node_itr->kind = sxcscript_kind_const_set;
+        } else if (sxcscript_token_eq_str(node_itr->token, "local_get")) {
+            node_itr->kind = sxcscript_kind_local_get;
+        } else if (sxcscript_token_eq_str(node_itr->token, "local_set")) {
+            node_itr->kind = sxcscript_kind_local_set;
+        } else if (sxcscript_token_eq_str(node_itr->token, "add")) {
+            node_itr->kind = sxcscript_kind_add;
+        } else if (sxcscript_token_eq_str(node_itr->token, "sub")) {
+            node_itr->kind = sxcscript_kind_sub;
+        } else if (sxcscript_token_eq_str(node_itr->token, "mul")) {
+            node_itr->kind = sxcscript_kind_mul;
+        } else if (sxcscript_token_eq_str(node_itr->token, "div")) {
+            node_itr->kind = sxcscript_kind_div;
+        } else if (sxcscript_token_eq_str(node_itr->token, "mod")) {
+            node_itr->kind = sxcscript_kind_mod;
+        } else if (sxcscript_token_eq_str(node_itr->token, "not")) {
+            node_itr->kind = sxcscript_kind_not;
+        } else if (sxcscript_token_eq_str(node_itr->token, "and")) {
+            node_itr->kind = sxcscript_kind_and;
+        } else if (sxcscript_token_eq_str(node_itr->token, "eq")) {
+            node_itr->kind = sxcscript_kind_eq;
+        } else if (sxcscript_token_eq_str(node_itr->token, "lt")) {
+            node_itr->kind = sxcscript_kind_lt;
+        } else if (sxcscript_token_eq_str(node_itr->token, "read")) {
+            node_itr->kind = sxcscript_kind_read;
+        } else if (sxcscript_token_eq_str(node_itr->token, "write")) {
+            node_itr->kind = sxcscript_kind_write;
+        } else if (sxcscript_token_eq_str(node_itr->token, "usleep")) {
+            node_itr->kind = sxcscript_kind_usleep;
         }
     }
 }
