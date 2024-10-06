@@ -196,8 +196,7 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** 
     } else if (sxcscript_token_eq_str(token_this, ".")) {
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, token_itr, break_i, continue_i);
-    } 
-    else if (sxcscript_token_eq_str(token_this, "if")) {
+    } else if (sxcscript_token_eq_str(token_this, "if")) {
         int32_t if_i = sxcscript->label_size++;
         int32_t else_i = sxcscript->label_size++;
         (*token_itr)++;
