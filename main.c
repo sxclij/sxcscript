@@ -352,6 +352,7 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
     sxcscript->label_size = 0;
     sxcscript_tokenize(src, sxcscript->token);
+    sxcscript_preprocess(sxcscript->token);
     sxcscript_parse(sxcscript);
     sxcscript_analyze(sxcscript);
     sxcscript_link(sxcscript);
