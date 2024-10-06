@@ -69,8 +69,6 @@ struct sxcscript {
     struct sxcscript_token token[sxcscript_compile_capacity];
     struct sxcscript_node node[sxcscript_compile_capacity];
     struct sxcscript_label label[sxcscript_compile_capacity];
-    struct sxcscript_node* free;
-    struct sxcscript_node* parsed;
     union sxcscript_mem* inst_begin;
     union sxcscript_mem* data_begin;
     int32_t label_size;
