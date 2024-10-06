@@ -177,9 +177,6 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
         }
     }
 }
-void sxcscript_preprocess(struct sxcscript_token* token) {
-    
-}
 void sxcscript_parse_push(struct sxcscript_node** free, struct sxcscript_node* parsed, enum sxcscript_kind kind, struct sxcscript_token* token, union sxcscript_node_val val) {
     struct sxcscript_node* node = sxcscript_node_insert(free, parsed);
     *node = (struct sxcscript_node){.kind = kind, .token = token, .val = val, .prev = node->prev, .next = node->next};
@@ -355,7 +352,6 @@ void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
     sxcscript->label_size = 0;
     sxcscript_tokenize(src, sxcscript->token);
-    sxcscript_preprocess(sxcscript->token);
     sxcscript_parse(sxcscript);
     sxcscript_analyze(sxcscript);
     sxcscript_link(sxcscript);
