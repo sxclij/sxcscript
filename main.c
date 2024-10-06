@@ -54,8 +54,6 @@ struct sxcscript_node {
     enum sxcscript_kind kind;
     struct sxcscript_token* token;
     union sxcscript_node_val val;
-    struct sxcscript_node* prev;
-    struct sxcscript_node* next;
 };
 struct sxcscript_label {
     struct sxcscript_token* token;
@@ -114,27 +112,6 @@ int32_t sxcscript_token_to_int32(struct sxcscript_token* token) {
         ret = (ret * 10) + token->data[i] - '0';
     }
     return is_neg ? -ret : ret;
-}
-void sxcscript_node_free(struct sxcscript_node** free, struct sxcscript_node* node) {
-    node->prev = *free;
-    (*free)->next = node;
-    *free = node;
-}
-struct sxcscript_node* sxcscript_node_alloc(struct sxcscript_node** free) {
-    struct sxcscript_node* node = *free;
-    *free = (*free)->prev;
-    *node = (struct sxcscript_node){.prev = NULL, .next = NULL};
-    return node;
-}
-struct sxcscript_node* sxcscript_node_insert(struct sxcscript_node** free, struct sxcscript_node* next) {
-    struct sxcscript_node* node = sxcscript_node_alloc(free);
-    struct sxcscript_node* prev = next->prev;
-    next->prev = node;
-    *node = (struct sxcscript_node){.prev = prev, .next = next};
-    if (prev != NULL) {
-        prev->next = node;
-    }
-    return node;
 }
 struct sxcscript_node* sxcscript_node_find(struct sxcscript_node* src, struct sxcscript_node* this) {
     for (struct sxcscript_node* itr = src->prev; itr != NULL; itr = itr->prev) {
