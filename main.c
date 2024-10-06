@@ -132,10 +132,10 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
         }
     }
 }
-void sxcscript_parse_push(struct sxcscript_node** parsed, enum sxcscript_kind kind, struct sxcscript_token* token, union sxcscript_node_val val) {
-    *((*parsed)++) = (struct sxcscript_node){.kind = kind, .token = token, .val = val};
+void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, union sxcscript_node_val val) {
+    *((*node_itr)++) = (struct sxcscript_node){.kind = kind, .token = token, .val = val};
 }
-void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_token** token_itr, int break_i, int continue_i) {
+void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** node_itr, struct sxcscript_token** token_itr, int break_i, int continue_i) {
     struct sxcscript_token* token_this = *token_itr;
     struct sxcscript_node* node_this = sxcscript->parsed;
     if (sxcscript_token_eq_str(token_this, "(")) {
