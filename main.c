@@ -191,8 +191,9 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
 }
 void sxcscript_parse(struct sxcscript* sxcscript) {
     struct sxcscript_token* token_itr = sxcscript->token;
+    struct sxcscript_node* node_itr = sxcscript->node;
     while (token_itr->size != 0) {
-        sxcscript_parse_expr(sxcscript, &token_itr, -1, -1);
+        sxcscript_parse_expr(sxcscript, &node_itr, &token_itr, -1, -1);
     }
 }
 void sxcscript_analyze_primitive(struct sxcscript_node* parsed_begin) {
