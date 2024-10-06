@@ -113,26 +113,6 @@ int32_t sxcscript_token_to_int32(struct sxcscript_token* token) {
     }
     return is_neg ? -ret : ret;
 }
-struct sxcscript_node* sxcscript_node_find(struct sxcscript_node* src, struct sxcscript_node* this) {
-    for (struct sxcscript_node* itr = src->prev; itr != NULL; itr = itr->prev) {
-        if (itr->token == this->token) {
-            return itr;
-        }
-    }
-    for (struct sxcscript_node* itr = src->prev; itr != NULL; itr = itr->prev) {
-        if (sxcscript_token_eq(itr->token, this->token)) {
-            return itr;
-        }
-    }
-    return NULL;
-}
-int32_t sxcscript_node_left(struct sxcscript_node* node) {
-    int32_t ret = 0;
-    for (struct sxcscript_node* itr = node; itr->prev != NULL; itr = itr->prev) {
-        ret++;
-    }
-    return ret;
-}
 void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
     struct sxcscript_token* token_itr = token;
     *token_itr = (struct sxcscript_token){src, 0};
