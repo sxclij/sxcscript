@@ -294,12 +294,6 @@ void sxcscript_link(struct sxcscript* sxcscript) {
     }
 }
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
-    sxcscript->free = sxcscript->node;
-    *(sxcscript->free) = (struct sxcscript_node){.prev = NULL, .next = NULL};
-    for (int i = 1; i < sxcscript_compile_capacity; i++) {
-        sxcscript_node_free(&sxcscript->free, &sxcscript->node[i]);
-    }
-    sxcscript->parsed = sxcscript_node_alloc(&sxcscript->free);
     sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
     sxcscript->label_size = 0;
     sxcscript_tokenize(src, sxcscript->token);
