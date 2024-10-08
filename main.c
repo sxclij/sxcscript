@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/01.txt"
+#define sxcscript_path "test/02.txt"
 #define sxcscript_mem_capacity (1 << 16)
 #define sxcscript_compile_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
@@ -159,8 +159,17 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
                 (*token_itr)++;
             }
         }
+        for (int32_t i = 0; i < arg_size; i++) {
+            // atode jissou
+        }
         (*token_itr)++;
         sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = fn_label});
+        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, (union sxcscript_node_val){.literal = -2});
+        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, (union sxcscript_node_val){.literal = -2});
+        sxcscript_parse_push(node_itr, sxcscript_kind_local_get, NULL, (union sxcscript_node_val){0});
+        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, (union sxcscript_node_val){.literal = 2+arg_size});
+        sxcscript_parse_push(node_itr, sxcscript_kind_sub, NULL, (union sxcscript_node_val){0});
+        sxcscript_parse_push(node_itr, sxcscript_kind_local_set, NULL, (union sxcscript_node_val){0});
         sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
         sxcscript_parse_push(node_itr, sxcscript_kind_label_fnend, NULL, (union sxcscript_node_val){0});
     } else if (sxcscript_token_eq_str(token_this, "if")) {
@@ -221,8 +230,6 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
             node_itr->kind = sxcscript_kind_local_get;
         } else if (sxcscript_token_eq_str(node_itr->token, "local_set")) {
             node_itr->kind = sxcscript_kind_local_set;
-        } else if (sxcscript_token_eq_str(node_itr->token, "return")) {
-            node_itr->kind = sxcscript_kind_return;
         } else if (sxcscript_token_eq_str(node_itr->token, "add")) {
             node_itr->kind = sxcscript_kind_add;
         } else if (sxcscript_token_eq_str(node_itr->token, "sub")) {
@@ -241,6 +248,8 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
             node_itr->kind = sxcscript_kind_eq;
         } else if (sxcscript_token_eq_str(node_itr->token, "lt")) {
             node_itr->kind = sxcscript_kind_lt;
+        } else if (sxcscript_token_eq_str(node_itr->token, "return")) {
+            node_itr->kind = sxcscript_kind_return;
         } else if (sxcscript_token_eq_str(node_itr->token, "read")) {
             node_itr->kind = sxcscript_kind_read;
         } else if (sxcscript_token_eq_str(node_itr->token, "write")) {
@@ -256,23 +265,37 @@ void sxcscript_analyze_var(struct sxcscript_node* node) {
     int32_t offset_size = 0;
     int32_t local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
-        if (node_itr->kind == sxcscript_kind_const_get) {
-            if ('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9' || node_itr->token->data[0] == '-') {
-                node_itr->val.literal = sxcscript_token_to_int32(node_itr->token);
-            } else {
-                for (int32_t i = 0;; i++) {
-                    if (i == local_size) {
-                        local_token[local_size] = node_itr->token;
-                        local_offset[local_size++] = offset_size;
-                        node_itr->val.literal = offset_size++;
-                        break;
-                    }
-                    if (sxcscript_token_eq(local_token[i], node_itr->token)) {
-                        node_itr->val.literal = local_offset[i];
-                        break;
-                    }
+        if (node_itr->kind != sxcscript_kind_const_get) {
+            continue;
+        }
+        if(node_itr->token == NULL) {
+            continue;
+        }
+        if ('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9' || node_itr->token->data[0] == '-') {
+            node_itr->val.literal = sxcscript_token_to_int32(node_itr->token);
+        } else {
+            for (int32_t i = 0;; i++) {
+                if (i == local_size) {
+                    local_token[local_size] = node_itr->token;
+                    local_offset[local_size++] = offset_size;
+                    node_itr->val.literal = offset_size++;
+                    break;
+                }
+                if (sxcscript_token_eq(local_token[i], node_itr->token)) {
+                    node_itr->val.literal = local_offset[i];
+                    break;
                 }
             }
+        }
+    }
+}
+int32_t sxcscript_analyze_toinst_searchlabel(struct sxcscript_label* label, int32_t label_size, struct sxcscript_node* node) {
+    for (int32_t i = 0; i < label_size; i++) {
+        if (label[i].token == NULL) {
+            continue;
+        }
+        if (sxcscript_token_eq(label[i].token, node->token)) {
+            return i;
         }
     }
 }
@@ -287,6 +310,9 @@ void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node
         } else if (node_itr->kind == sxcscript_kind_jmp || node_itr->kind == sxcscript_kind_jze) {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
             *(inst_itr++) = (union sxcscript_mem){.val = node_itr->val.label_i};
+        } else if (node_itr->kind == sxcscript_kind_call) {
+            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
+            *(inst_itr++) = (union sxcscript_mem){.val = sxcscript_analyze_toinst_searchlabel(sxcscript->label, sxcscript->label_size, node_itr)};
         } else {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
         }
@@ -300,7 +326,7 @@ void sxcscript_analyze(struct sxcscript* sxcscript) {
 }
 void sxcscript_link(struct sxcscript* sxcscript) {
     for (union sxcscript_mem* inst_itr = sxcscript->inst_begin; inst_itr->kind != sxcscript_kind_null; inst_itr++) {
-        if (inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze) {
+        if (inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze || inst_itr->kind == sxcscript_kind_call) {
             inst_itr += 1;
             inst_itr->val = sxcscript->label[inst_itr->val].inst_i;
         } else if (inst_itr->kind == sxcscript_kind_const_get) {
@@ -380,6 +406,21 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                     sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val + 1].val - 1;
                 }
                 sxcscript->mem[sxcscript_global_sp].val -= 1;
+                break;
+            case sxcscript_kind_call:
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = sxcscript->mem[sxcscript_global_ip].val;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = sxcscript->mem[sxcscript_global_sp].val;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = sxcscript->mem[sxcscript_global_bp].val;
+                sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val + 1].val - 1;
+                sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript_global_sp].val;
+                sxcscript->mem[sxcscript_global_sp].val += 128;
+                break;
+            case sxcscript_kind_return:
+                int32_t result = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
+                sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_bp].val - 3].val;
+                sxcscript->mem[sxcscript_global_sp].val = sxcscript->mem[sxcscript->mem[sxcscript_global_bp].val - 2].val;
+                sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript->mem[sxcscript_global_bp].val - 1].val;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = result;
                 break;
             case sxcscript_kind_write:
                 write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val, 1);
