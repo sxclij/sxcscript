@@ -1,10 +1,10 @@
 main()
 
-fn zero() (
-    return(48)
+fn test(a,b) (
+    write(local_get(a).add(local_get(b)))
+    return(0)
 )
 
 fn main() (
-    write(add(zero(),8))
-    usleep(10000000)
+    test(48,3)
 )
