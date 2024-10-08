@@ -1,9 +1,0 @@
-(
-    a.local_set(1)
-    jze(a.localget(),qawsedrftgy_if)
-        b.local_set(2)
-        jmp(qawsedrftgy_else)
-    label(qawsedrftgy_if)
-        b.local_set(3)
-    label(qawsedrftgy_else)
-)

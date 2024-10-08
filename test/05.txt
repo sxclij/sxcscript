@@ -1,9 +1,0 @@
-(
-    local_set(a, 1)
-    if(local_get(a)) (
-        local_set(b, 2)
-    )
-    else (
-        local_set(b, 3)
-    )
-)
