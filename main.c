@@ -17,6 +17,7 @@ enum sxcscript_kind {
     sxcscript_kind_nop,
     sxcscript_kind_push,
     sxcscript_kind_label,
+    sxcscript_kind_label_fnend,
     sxcscript_kind_call,
     sxcscript_kind_return,
     sxcscript_kind_jmp,
@@ -159,8 +160,9 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
             }
         }
         (*token_itr)++;
-        sxcscript_parse_push(node_itr, sxcscript_kind_jze, NULL, (union sxcscript_node_val){.label_i = fn_label});
+        sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = fn_label});
         sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
+        sxcscript_parse_push(node_itr, sxcscript_kind_label_fnend, NULL, (union sxcscript_node_val){0});
     } else if (sxcscript_token_eq_str(token_this, "if")) {
         int32_t if_label = sxcscript->label_size++;
         int32_t else_label = sxcscript->label_size++;
@@ -219,6 +221,8 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
             node_itr->kind = sxcscript_kind_local_get;
         } else if (sxcscript_token_eq_str(node_itr->token, "local_set")) {
             node_itr->kind = sxcscript_kind_local_set;
+        } else if (sxcscript_token_eq_str(node_itr->token, "return")) {
+            node_itr->kind = sxcscript_kind_return;
         } else if (sxcscript_token_eq_str(node_itr->token, "add")) {
             node_itr->kind = sxcscript_kind_add;
         } else if (sxcscript_token_eq_str(node_itr->token, "sub")) {
