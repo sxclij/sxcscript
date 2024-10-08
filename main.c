@@ -143,9 +143,6 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
             }
         }
         (*token_itr)++;
-    } else if (sxcscript_token_eq_str(token_this, ".")) {
-        (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
     } else if (sxcscript_token_eq_str(token_this, "fn")) {
         int32_t fn_label = sxcscript->label_size++;
         int32_t arg_size = 0;
@@ -216,6 +213,10 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
     } else {
         sxcscript_parse_push(node_itr, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
         (*token_itr)++;
+        if (sxcscript_token_eq_str(*token_itr, ".")) {
+            (*token_itr)++;
+            sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
+        }
     }
 }
 void sxcscript_parse(struct sxcscript* sxcscript) {
@@ -272,7 +273,7 @@ void sxcscript_analyze_var(struct sxcscript_node* node) {
     int32_t offset_size = 0;
     int32_t local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
-        if(node_itr->kind == sxcscript_kind_label_fnend) {
+        if (node_itr->kind == sxcscript_kind_label_fnend) {
             offset_size = 0;
             local_size = 0;
         }

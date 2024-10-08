@@ -2,7 +2,7 @@ main()
 
 fn abs(x) (
     if(lt(local_get(x), 0)) (
-        return(local_get(x).mul(-1))
+        return local_get(x).mul(-1)
     ) else (
         return local_get(x)
     )
