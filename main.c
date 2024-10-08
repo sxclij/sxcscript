@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define sxcscript_path "test/01.txt"
-#define sxcscript_mem_capacity (1 << 20)
+#define sxcscript_mem_capacity (1 << 16)
 #define sxcscript_compile_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
 #define sxcscript_global_capacity (1 << 8)
@@ -18,6 +18,7 @@ enum sxcscript_kind {
     sxcscript_kind_push,
     sxcscript_kind_label,
     sxcscript_kind_call,
+    sxcscript_kind_return,
     sxcscript_kind_jmp,
     sxcscript_kind_jze,
     sxcscript_kind_const_get,
@@ -145,9 +146,21 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
     } else if (sxcscript_token_eq_str(token_this, "fn")) {
-        (*token_itr)++;
         int32_t fn_label = sxcscript->label_size++;
+        int32_t arg_size = 0;
+        (*token_itr)++;
+        sxcscript->label[fn_label].token = *token_itr;
+        *token_itr += 2;
+        while (!sxcscript_token_eq_str(*token_itr, ")")) {
+            sxcscript_parse_push(node_itr, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
+            arg_size++;
+            if (sxcscript_token_eq_str(*token_itr, ",")) {
+                (*token_itr)++;
+            }
+        }
+        (*token_itr)++;
         sxcscript_parse_push(node_itr, sxcscript_kind_jze, NULL, (union sxcscript_node_val){.label_i = fn_label});
+        sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
     } else if (sxcscript_token_eq_str(token_this, "if")) {
         int32_t if_label = sxcscript->label_size++;
         int32_t else_label = sxcscript->label_size++;
