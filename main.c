@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/10.txt"
+#define sxcscript_path "test/02.txt"
 #define sxcscript_mem_capacity (1 << 20)
 #define sxcscript_compile_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
@@ -46,6 +46,10 @@ struct sxcscript_token {
     const char* data;
     int32_t size;
 };
+struct sxcscript_token_list {
+    struct sxcscript_token* token;
+    struct sxcscript_token_list* prev;
+};
 union sxcscript_node_val {
     int32_t label_i;
     int32_t literal;
@@ -60,6 +64,10 @@ struct sxcscript_label {
     int32_t arg_size;
     int32_t inst_i;
 };
+struct sxcscript_macro {
+    struct sxcscript_token* name;
+    struct sxcscript_token* expr;
+};
 union sxcscript_mem {
     enum sxcscript_kind kind;
     int32_t val;
@@ -67,11 +75,14 @@ union sxcscript_mem {
 struct sxcscript {
     union sxcscript_mem mem[sxcscript_mem_capacity];
     struct sxcscript_token token[sxcscript_compile_capacity];
+    struct sxcscript_token_list token_list[sxcscript_compile_capacity];
     struct sxcscript_node node[sxcscript_compile_capacity];
     struct sxcscript_label label[sxcscript_compile_capacity];
+    struct sxcscript_macro macro[sxcscript_compile_capacity];
     union sxcscript_mem* inst_begin;
     union sxcscript_mem* data_begin;
     int32_t label_size;
+    int32_t macro_size;
 };
 
 enum bool sxcscript_token_eq(struct sxcscript_token* a, struct sxcscript_token* b) {
@@ -126,16 +137,26 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
         }
     }
 }
-void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, union sxcscript_node_val val) {
+void sxcscript_parse_node_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, union sxcscript_node_val val) {
     *((*node_itr)++) = (struct sxcscript_node){.kind = kind, .token = token, .val = val};
 }
-void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** node_itr, struct sxcscript_token** token_itr, int break_i, int continue_i) {
+struct sxcscript_token_list* sxcscript_parse_token_list_alloc(struct sxcscript_token_list** token_list_free) {
+    return (*token_list_free)++;
+}
+void sxcscript_parse_token_list_push(struct sxcscript_token_list** token_list_free, struct sxcscript_token_list* root) {
+    struct sxcscript_token_list* next = root;
+    while(next->prev != NULL) {
+        next = next->prev;
+    }
+    next->prev = (*token_list_free)++;
+}
+void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** node_itr, struct sxcscript_token** token_itr, struct sxcscript_token_list** token_list_free, struct sxcscript_token_list* arg, int break_i, int continue_i) {
     struct sxcscript_token* token_this = *token_itr;
     struct sxcscript_node* node_this = *node_itr;
     if (sxcscript_token_eq_str(token_this, "(")) {
         (*token_itr)++;
         while (!sxcscript_token_eq_str(*token_itr, ")")) {
-            sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
+            sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, break_i, continue_i);
             if (sxcscript_token_eq_str(*token_itr, ",")) {
                 (*token_itr)++;
             }
@@ -143,52 +164,58 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
         (*token_itr)++;
     } else if (sxcscript_token_eq_str(token_this, ".")) {
         (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
+        sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, break_i, continue_i);
+    } else if (sxcscript_token_eq_str(token_this, "def")) {
+        struct sxcscript_token_list* this_arg = sxcscript_parse_token_list_alloc(token_list_free);
+        (*token_itr)++;
+        
     } else if (sxcscript_token_eq_str(token_this, "if")) {
         int32_t if_i = sxcscript->label_size++;
         int32_t else_i = sxcscript->label_size++;
         (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
-        sxcscript_parse_push(node_itr, sxcscript_kind_jze, NULL, (union sxcscript_node_val){.label_i = if_i});
-        sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
+        sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, break_i, continue_i);
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_jze, NULL, (union sxcscript_node_val){.label_i = if_i});
+        sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, break_i, continue_i);
         if (sxcscript_token_eq_str(*token_itr, "else")) {
             (*token_itr)++;
-            sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = else_i});
-            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = if_i});
-            sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
-            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = else_i});
+            sxcscript_parse_node_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = else_i});
+            sxcscript_parse_node_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = if_i});
+            sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, break_i, continue_i);
+            sxcscript_parse_node_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = else_i});
         } else {
-            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = if_i});
+            sxcscript_parse_node_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = if_i});
         }
     } else if (sxcscript_token_eq_str(token_this, "loop")) {
         int32_t start_label = sxcscript->label_size++;
         int32_t end_label = sxcscript->label_size++;
         (*token_itr)++;
-        sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = start_label});
-        sxcscript_parse_expr(sxcscript, node_itr, token_itr, end_label, start_label);
-        sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = start_label});
-        sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = end_label});
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = start_label});
+        sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, end_label, start_label);
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = start_label});
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = end_label});
     } else if (sxcscript_token_eq_str(token_this, "break")) {
         (*token_itr)++;
-        sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = break_i});
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = break_i});
     } else if (sxcscript_token_eq_str(token_this, "continue")) {
         (*token_itr)++;
-        sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = continue_i});
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = continue_i});
     } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
-        sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
-        sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this, (union sxcscript_node_val){0});
+        sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, break_i, continue_i);
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_call, token_this, (union sxcscript_node_val){0});
     } else {
-        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
+        sxcscript_parse_node_push(node_itr, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
         (*token_itr)++;
     }
 }
 void sxcscript_parse(struct sxcscript* sxcscript) {
-    struct sxcscript_token* token_itr = sxcscript->token;
     struct sxcscript_node* node_itr = sxcscript->node;
+    struct sxcscript_token* token_itr = sxcscript->token;
+    struct sxcscript_token_list* token_list_free = sxcscript->token_list;
     while (token_itr->size != 0) {
-        sxcscript_parse_expr(sxcscript, &node_itr, &token_itr, -1, -1);
+        sxcscript_parse_expr(sxcscript, &node_itr, &token_itr, &token_list_free, NULL, - 1, -1);
     }
+    *(token_itr + 1) = (struct sxcscript_token){.size = 0};
 }
 void sxcscript_analyze_primitive(struct sxcscript_node* node) {
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
@@ -290,6 +317,7 @@ void sxcscript_link(struct sxcscript* sxcscript) {
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
     sxcscript->label_size = 0;
+    sxcscript->macro_size = 0;
     sxcscript_tokenize(src, sxcscript->token);
     sxcscript_parse(sxcscript);
     sxcscript_analyze(sxcscript);
