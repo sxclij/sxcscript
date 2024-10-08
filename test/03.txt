@@ -1,10 +1,14 @@
 main()
 
+fn puti(x) (
+    write(local_get(x).add(48))
+)
+
 fn abs(x) (
     if(lt(local_get(x), 0)) (
-        return local_get(x).mul(-1)
+        local_get(x).mul(-1)
     ) else (
-        return local_get(x)
+        local_get(x)
     )
 )
 
@@ -19,9 +23,7 @@ fn main() (
         loop (
             if(eq(local_get(i),10)) break
             x.local_set(local_get(x).mul(local_get(a)).add(local_get(c)).mod(local_get(m)))
-            write(
-                abs(local_get(x)).div(1000).mod(10).add(48)
-            )
+            puti(local_get(x).abs().div(1000).mod(10))
             i.local_set(local_get(i).add(1))
         )
         write(10)
