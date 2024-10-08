@@ -268,6 +268,10 @@ void sxcscript_analyze_var(struct sxcscript_node* node) {
     int32_t offset_size = 0;
     int32_t local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
+        if(node_itr->kind == sxcscript_kind_label_fnend) {
+            offset_size = 0;
+            local_size = 0;
+        }
         if (node_itr->kind != sxcscript_kind_const_get) {
             continue;
         }
