@@ -133,7 +133,6 @@ void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind 
 }
 void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** node_itr, struct sxcscript_token** token_itr, int break_i, int continue_i) {
     struct sxcscript_token* token_this = *token_itr;
-    struct sxcscript_node* node_this = *node_itr;
     if (sxcscript_token_eq_str(token_this, "(")) {
         (*token_itr)++;
         while (!sxcscript_token_eq_str(*token_itr, ")")) {
@@ -279,7 +278,7 @@ void sxcscript_analyze_var(struct sxcscript_node* node) {
         if (node_itr->token == NULL) {
             continue;
         }
-        if ('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9' || node_itr->token->data[0] == '-') {
+        if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
             node_itr->val.literal = sxcscript_token_to_int32(node_itr->token);
         } else {
             for (int32_t i = 0;; i++) {
@@ -310,6 +309,7 @@ int32_t sxcscript_analyze_toinst_searchlabel(struct sxcscript_label* label, int3
             return i;
         }
     }
+    return -1;
 }
 void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node* node) {
     union sxcscript_mem* inst_itr = sxcscript->inst_begin;
@@ -420,9 +420,10 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 sxcscript->mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_call:
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = sxcscript->mem[sxcscript_global_ip].val;
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = sxcscript->mem[sxcscript_global_sp].val;
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = sxcscript->mem[sxcscript_global_bp].val;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 0].val = sxcscript->mem[sxcscript_global_ip].val;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 1].val = sxcscript->mem[sxcscript_global_sp].val;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 2].val = sxcscript->mem[sxcscript_global_bp].val;
+                sxcscript->mem[sxcscript_global_sp].val += 3;
                 sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val + 1].val - 1;
                 sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript_global_sp].val;
                 sxcscript->mem[sxcscript_global_sp].val += 128;
@@ -441,6 +442,8 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
             case sxcscript_kind_usleep:
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = usleep(sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val);
                 sxcscript->mem[sxcscript_global_sp].val -= 1;
+                break;
+            default:
                 break;
         }
         (sxcscript->mem[sxcscript_global_ip].val)++;
