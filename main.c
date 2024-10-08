@@ -278,7 +278,7 @@ void sxcscript_analyze_var(struct sxcscript_node* node) {
 }
 void sxcscript_analyze_toinst(struct sxcscript* sxcscript, struct sxcscript_node* node) {
     union sxcscript_mem* inst_itr = sxcscript->inst_begin;
-    for (struct sxcscript_node* node_itr = node; node_itr->kind == sxcscript_kind_null; node_itr++) {
+    for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
         if (node_itr->kind == sxcscript_kind_label) {
             sxcscript->label[node_itr->val.label_i].inst_i = inst_itr - sxcscript->mem;
         } else if (node_itr->kind == sxcscript_kind_const_get) {
