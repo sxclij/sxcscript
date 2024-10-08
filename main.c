@@ -74,12 +74,6 @@ struct sxcscript {
     int32_t label_size;
 };
 
-uint64_t xorshift(uint64_t* x) {
-    *x ^= *x << 13;
-    *x ^= *x >> 7;
-    *x ^= *x << 17;
-    return *x;
-}
 enum bool sxcscript_token_eq(struct sxcscript_token* a, struct sxcscript_token* b) {
     if (a->size != b->size) {
         return false;
