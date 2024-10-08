@@ -140,7 +140,7 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
 void sxcscript_parse_node_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, union sxcscript_node_val val) {
     *((*node_itr)++) = (struct sxcscript_node){.kind = kind, .token = token, .val = val};
 }
-struct sxcscript_token_list* sxcscript_parse_token_list_alloc(struct sxcscript_token_list** token_list_free, struct sxcscript_token_list* parent) {
+struct sxcscript_token_list* sxcscript_parse_token_list_alloc(struct sxcscript_token_list** token_list_free) {
     return (*token_list_free)++;
 }
 void sxcscript_parse_token_list_push(struct sxcscript_token_list** token_list_free, struct sxcscript_token_list* root) {
@@ -166,6 +166,9 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_free, arg, break_i, continue_i);
     } else if (sxcscript_token_eq_str(token_this, "def")) {
+        struct sxcscript_token_list* this_arg = sxcscript_parse_token_list_alloc(token_list_free);
+        (*token_itr)++;
+        
     } else if (sxcscript_token_eq_str(token_this, "if")) {
         int32_t if_i = sxcscript->label_size++;
         int32_t else_i = sxcscript->label_size++;
