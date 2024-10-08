@@ -60,6 +60,10 @@ struct sxcscript_label {
     int32_t arg_size;
     int32_t inst_i;
 };
+struct sxcscript_macro {
+    struct sxcscript_token* name;
+    struct sxcscript_token* expr;
+};
 union sxcscript_mem {
     enum sxcscript_kind kind;
     int32_t val;
@@ -69,9 +73,11 @@ struct sxcscript {
     struct sxcscript_token token[sxcscript_compile_capacity];
     struct sxcscript_node node[sxcscript_compile_capacity];
     struct sxcscript_label label[sxcscript_compile_capacity];
+    struct sxcscript_macro macro[sxcscript_compile_capacity];
     union sxcscript_mem* inst_begin;
     union sxcscript_mem* data_begin;
     int32_t label_size;
+    int32_t macro_size;
 };
 
 enum bool sxcscript_token_eq(struct sxcscript_token* a, struct sxcscript_token* b) {
@@ -290,6 +296,7 @@ void sxcscript_link(struct sxcscript* sxcscript) {
 void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
     sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
     sxcscript->label_size = 0;
+    sxcscript->macro_size = 0;
     sxcscript_tokenize(src, sxcscript->token);
     sxcscript_parse(sxcscript);
     sxcscript_analyze(sxcscript);
