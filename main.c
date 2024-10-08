@@ -156,12 +156,6 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
         (*token_itr)++;
         sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_itr, arg, break_i, continue_i);
     } else if (sxcscript_token_eq_str(token_this, "def")) {
-        (*token_itr)++;
-        sxcscript->macro[sxcscript->macro_size].name = (*token_itr)++;
-        sxcscript->macro[sxcscript->macro_size].expr = *token_itr;
-        sxcscript->macro_size++;
-        sxcscript_parse_expr(sxcscript, node_itr, token_itr, token_list_itr, arg, break_i, continue_i);
-        *node_itr = node_this;
     } else if (sxcscript_token_eq_str(token_this, "if")) {
         int32_t if_i = sxcscript->label_size++;
         int32_t else_i = sxcscript->label_size++;
