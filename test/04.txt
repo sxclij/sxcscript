@@ -1,0 +1,56 @@
+main()
+
+fn putc(x) (
+    write(0, x.add(global_get(2)), 1)
+)
+fn puti(x) (
+    putc(local_get(x).add(48))
+)
+
+fn mov(a, b) (
+    global_set(local_get(-1).add(local_get(a)),local_get(-1).add(local_get(b)).global_get())
+)
+fn addv(a, b) (
+    local_get(a).add(local_get(-1).add(local_get(b)).global_get())
+)
+fn subv(a, b) (
+    local_get(a).sub(local_get(-1).add(local_get(b)).global_get())
+)
+fn mulv(a, b) (
+    local_get(a).mul(local_get(-1).add(local_get(b)).global_get())
+)
+fn divv(a, b) (
+    local_get(a).div(local_get(-1).add(local_get(b)).global_get())
+)
+fn modv(a, b) (
+    local_get(a).mod(local_get(-1).add(local_get(b)).global_get())
+)
+
+fn abs(x) (
+    if(local_get(x).lt(0)) (
+        local_get(x).mul(-1)
+    ) else (
+        local_get(x)
+    )
+)
+
+fn main() (
+    seed.local_set(114514)
+    a.local_set(1664525)
+    c.local_set(1013904223)
+    m.local_set(2147483647)
+    x.local_set(local_get(seed))
+    t.local_set(0)
+
+    loop (
+        i.local_set(0)
+        loop (
+            if(eq(local_get(i),10)) break
+            x.local_set(local_get(x).mulv(a).addv(c).modv(m))
+            t.local_set(puti(local_get(x).abs().div(1000).mod(10)))
+            i.local_set(local_get(i).add(1))
+        )
+        t.local_set(putc(10))
+        t.local_set(usleep(1000000))
+    )
+)

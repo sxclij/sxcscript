@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/01.txt"
+#define sxcscript_path "test/04.txt"
 #define sxcscript_mem_capacity (1 << 16)
 #define sxcscript_compile_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
@@ -367,7 +367,6 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
     int32_t a1;
     int32_t a2;
     int32_t a3;
-    int32_t a4;
     while (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
         switch (sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val].kind) {
             case sxcscript_kind_const_get:

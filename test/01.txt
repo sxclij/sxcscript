@@ -25,7 +25,7 @@ fn main() (
     loop (
         i.local_set(0)
         loop (
-            if(eq(local_get(i),10)) break
+            if(eq(local_get(i),32)) break
             x.local_set(local_get(x).mul(local_get(a)).add(local_get(c)).mod(local_get(m)))
             t.local_set(puti(local_get(x).abs().div(1000).mod(10)))
             i.local_set(local_get(i).add(1))
