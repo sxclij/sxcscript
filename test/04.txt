@@ -7,9 +7,6 @@ fn puti(x) (
     putc(local_get(x).add(48))
 )
 
-fn mov(a, b) (
-    global_set(local_get(-1).add(local_get(a)),local_get(-1).add(local_get(b)).global_get())
-)
 fn addv(a, b) (
     local_get(a).add(local_get(-1).add(local_get(b)).global_get())
 )
