@@ -35,6 +35,7 @@ enum sxcscript_kind {
     sxcscript_kind_and,
     sxcscript_kind_eq,
     sxcscript_kind_lt,
+    sxcscript_kind_syscall,
     sxcscript_kind_read,
     sxcscript_kind_write,
     sxcscript_kind_usleep,
@@ -424,7 +425,7 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 1].val = sxcscript->mem[sxcscript_global_sp].val;
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 2].val = sxcscript->mem[sxcscript_global_bp].val;
                 sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val + 1].val - 1;
-                sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript_global_sp].val+3;
+                sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript_global_sp].val + 3;
                 sxcscript->mem[sxcscript_global_sp].val += 128;
                 break;
             case sxcscript_kind_return:
@@ -433,6 +434,14 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 sxcscript->mem[sxcscript_global_sp].val = sxcscript->mem[sxcscript->mem[sxcscript_global_bp].val - 2].val;
                 sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript->mem[sxcscript_global_bp].val - 1].val;
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = result;
+                break;
+            case sxcscript_kind_syscall:
+                int32_t a1 = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
+                int32_t a2 = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val;
+                int32_t a3 = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 3].val;
+                int32_t a4 = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 4].val;
+                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 4].val = syscall(a1, a2, a3, a4);
+                sxcscript->mem[sxcscript_global_sp].val -= 3;
                 break;
             case sxcscript_kind_write:
                 sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val = write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val, 1);
