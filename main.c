@@ -169,7 +169,7 @@ void sxcscript_parse_expr(struct sxcscript* sxcscript, struct sxcscript_node** n
         sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, (union sxcscript_node_val){.literal = -2});
         sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, (union sxcscript_node_val){.literal = -2});
         sxcscript_parse_push(node_itr, sxcscript_kind_local_get, NULL, (union sxcscript_node_val){0});
-        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, (union sxcscript_node_val){.literal = 2 + arg_size});
+        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, (union sxcscript_node_val){.literal = 0 + arg_size});
         sxcscript_parse_push(node_itr, sxcscript_kind_sub, NULL, (union sxcscript_node_val){0});
         sxcscript_parse_push(node_itr, sxcscript_kind_local_set, NULL, (union sxcscript_node_val){0});
         sxcscript_parse_expr(sxcscript, node_itr, token_itr, break_i, continue_i);
