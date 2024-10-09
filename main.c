@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define sxcscript_path "test/03.txt"
+#define sxcscript_path "test/01.txt"
 #define sxcscript_mem_capacity (1 << 16)
 #define sxcscript_compile_capacity (1 << 16)
 #define sxcscript_buf_capacity (1 << 10)
