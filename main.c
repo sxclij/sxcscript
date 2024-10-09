@@ -423,9 +423,8 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 0].val = sxcscript->mem[sxcscript_global_ip].val;
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 1].val = sxcscript->mem[sxcscript_global_sp].val;
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) + 2].val = sxcscript->mem[sxcscript_global_bp].val;
-                sxcscript->mem[sxcscript_global_sp].val += 3;
                 sxcscript->mem[sxcscript_global_ip].val = sxcscript->mem[sxcscript->mem[sxcscript_global_ip].val + 1].val - 1;
-                sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript_global_sp].val;
+                sxcscript->mem[sxcscript_global_bp].val = sxcscript->mem[sxcscript_global_sp].val+3;
                 sxcscript->mem[sxcscript_global_sp].val += 128;
                 break;
             case sxcscript_kind_return:
@@ -439,7 +438,7 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val = write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val, 1);
                 break;
             case sxcscript_kind_usleep:
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) - 1].val = usleep(sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val);
+                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val = usleep(sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val);
                 break;
             default:
                 break;
