@@ -450,7 +450,7 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
             case sxcscript_kind_open:
                 a1 = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val;
                 a2 = sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val;
-                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val = open(a1, a2);
+                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 2].val = open((const char*)&sxcscript->mem[a1], a2);
                 sxcscript->mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_close:
