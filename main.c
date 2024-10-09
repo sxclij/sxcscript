@@ -436,12 +436,10 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
                 sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = result;
                 break;
             case sxcscript_kind_write:
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val, 1);
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val = write(STDOUT_FILENO, &sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val, 1);
                 break;
             case sxcscript_kind_usleep:
-                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val)++].val = usleep(sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val);
-                sxcscript->mem[sxcscript_global_sp].val -= 1;
+                sxcscript->mem[(sxcscript->mem[sxcscript_global_sp].val) - 1].val = usleep(sxcscript->mem[sxcscript->mem[sxcscript_global_sp].val - 1].val);
                 break;
             default:
                 break;
