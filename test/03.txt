@@ -1,7 +1,10 @@
 main()
 
+fn putc(x) (
+    write(0, x.add(global_get(2)), 1)
+)
 fn puti(x) (
-    write(local_get(x).add(48))
+    putc(local_get(x).add(48))
 )
 
 fn abs(x) (
@@ -27,7 +30,7 @@ fn main() (
             t.local_set(puti(local_get(x).abs().div(1000).mod(10)))
             i.local_set(local_get(i).add(1))
         )
-        t.local_set(write(10))
+        t.local_set(putc(10))
         t.local_set(usleep(1000000))
     )
 )
