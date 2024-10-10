@@ -1,7 +1,7 @@
 main()
 
 fn putc(x) (
-    write(0, x.add(global_get(2)), 1)
+    write(1, x.add(global_get(2)), 1)
 )
 fn puti(x) (
     putc(local_get(x).add(48))

@@ -2,7 +2,7 @@ main()
 end()
 
 fn putc(x) (
-    write(0, x.add(global_get(2)), 1)
+    write(1, x.add(global_get(2)), 1)
 )
 fn getc() (
     t.local_set(read(0, x.add(global_get(2)), 1))
