@@ -4,8 +4,9 @@
 
 #define sxcapp_stacksize (128 * 1024 * 1024)
 #define sxcscript_path "test/01.txt"
-#define sxcscript_mem_capacity (16 * 1024 * 1024)
-#define sxcscript_compile_capacity (2 * 1024)
+#define sxcscript_mem_size (16 * 1024 * 1024)
+#define sxcscript_compile_size (2 * 1024)   // デバッグ用に小さくしてるので後で戻す
+#define sxcscript_global_size (1024)
 
 enum bool {
     false = 0,
@@ -100,7 +101,7 @@ void sxcscript_run(union sxcscript_mem* mem) {
 }
 void sxcscript_readfile(char* dst) {
     int fd = open(sxcscript_path, O_RDONLY);
-    int n = read(fd, dst, sxcscript_compile_capacity);
+    int n = read(fd, dst, sxcscript_compile_size);
     dst[n] = '\0';
     close(fd);
 }
@@ -169,8 +170,8 @@ int sxcscript_analyze_searchlabel(struct sxcscript_label* label, int label_size,
     return -1;
 }
 void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* label, union sxcscript_mem* mem) {
-    struct sxcscript_token* local_token[sxcscript_compile_capacity];
-    int local_offset[sxcscript_compile_capacity];
+    struct sxcscript_token* local_token[sxcscript_compile_size];
+    int local_offset[sxcscript_compile_size];
     union sxcscript_mem* inst_itr = mem;
     int offset_size = 0;
     int local_size = 0;
@@ -268,10 +269,10 @@ void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* labe
 void sxcscript_link(struct sxcscript_node* node, struct sxcscript_label* label, union sxcscript_mem* mem) {
 }
 void sxcscript_init(union sxcscript_mem* mem) {
-    char src[sxcscript_compile_capacity];
-    struct sxcscript_token token[sxcscript_compile_capacity / sizeof(struct sxcscript_token)];
-    struct sxcscript_node node[sxcscript_compile_capacity / sizeof(struct sxcscript_node)];
-    struct sxcscript_label label[sxcscript_compile_capacity / sizeof(struct sxcscript_label)];
+    char src[sxcscript_compile_size];
+    struct sxcscript_token token[sxcscript_compile_size / sizeof(struct sxcscript_token)];
+    struct sxcscript_node node[sxcscript_compile_size / sizeof(struct sxcscript_node)];
+    struct sxcscript_label label[sxcscript_compile_size / sizeof(struct sxcscript_label)];
     union sxcscript_mem* global_begin;
     union sxcscript_mem* inst_begin;
     union sxcscript_mem* data_begin;
@@ -282,7 +283,7 @@ void sxcscript_init(union sxcscript_mem* mem) {
     sxcscript_link(node, label, mem);
 }
 void sxcscript() {
-    static union sxcscript_mem mem[sxcscript_mem_capacity];
+    static union sxcscript_mem mem[sxcscript_mem_size];
     sxcscript_init(mem);
     sxcscript_run(mem);
 }
