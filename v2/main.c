@@ -76,13 +76,25 @@ enum bool sxcscript_token_iseq(struct sxcscript_token* a, struct sxcscript_token
     }
     return true;
 }
+enum bool sxcscript_token_isdigit(struct sxcscript_token* token) {
+    return (token->data[0] >= '0' && token->data[0] <= '9') || token->data[0] == '-';
+}
 enum bool sxcscript_token_iseq_str(struct sxcscript_token* a, const char* str) {
     int str_size = 0;
     while (str[str_size] != '\0') {
         str_size++;
     }
-    struct sxcscript_token b = {.data = str, .size = str_size};
+    struct sxcscript_token b = (struct sxcscript_token){.data = str, .size = str_size};
     return sxcscript_token_iseq(a, &b);
+}
+int sxcscript_token_toint(struct sxcscript_token* token) {
+    enum bool is_neg = token->data[0] == '-';
+    int i = is_neg ? 1 : 0;
+    int x = 0;
+    for (; i < token->size; i++) {
+        x = (x * 10) + token->data[i] - '0';
+    }
+    return is_neg ? -x : x;
 }
 void sxcscript_run(union sxcscript_mem* mem) {
 }
@@ -94,7 +106,7 @@ void sxcscript_readfile(char* dst) {
 }
 void sxcscript_tokenize(char* src, struct sxcscript_token* token) {
     struct sxcscript_token* token_itr = token;
-    struct sxcscript_token token_this = {.data = src, .size = 0};
+    struct sxcscript_token token_this = (struct sxcscript_token){.data = src, .size = 0};
     for (char* itr = src; *itr != '\0'; itr++) {
         if (*itr == ' ' || *itr == '\n') {
             if (token_this.size > 0) {
@@ -132,8 +144,8 @@ void sxcscript_parse_expr(struct sxcscript_token** token_itr, struct sxcscript_n
         sxcscript_parse_expr(token_itr, node_itr, label_itr, label, break_i, continue_i);
         sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this, 0);
     } else {
-        sxcscript_parse_push(node_itr, sxcscript_kind_nop, *token_itr, 0);
         sxcscript_parse_push(node_itr, sxcscript_kind_const_get, *token_itr, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_nop, *token_itr, 0);
         (*token_itr)++;
     }
 }
@@ -145,7 +157,58 @@ void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node,
         sxcscript_parse_expr(&token_itr, &node_itr, &label_itr, label, -1, -1);
     }
 }
-void 
+void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* label, union sxcscript_mem* mem) {
+    for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
+        if (node_itr->token == NULL) {
+            continue;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "const_get")) {
+            node_itr->kind = sxcscript_kind_const_get;
+            if (sxcscript_token_iseq_str((node_itr + 2)->token, "addr")) {
+                (node_itr + 1)->kind = sxcscript_kind_nop;
+                (node_itr + 2)->kind = sxcscript_kind_nop;
+            } else if (sxcscript_token_isdigit((node_itr)->token)) {
+                node_itr->val = sxcscript_token_toint(node_itr->token);
+                (node_itr + 1)->kind = sxcscript_kind_nop;
+            } else {
+                (node_itr + 1)->kind = sxcscript_kind_local_get;
+            }
+        } else if (sxcscript_token_iseq_str(node_itr->token, "local_get")) {
+            node_itr->kind = sxcscript_kind_local_get;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "local_set")) {
+            node_itr->kind = sxcscript_kind_local_set;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "global_get")) {
+            node_itr->kind = sxcscript_kind_global_get;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "global_set")) {
+            node_itr->kind = sxcscript_kind_global_set;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "add")) {
+            node_itr->kind = sxcscript_kind_add;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "sub")) {
+            node_itr->kind = sxcscript_kind_sub;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "mul")) {
+            node_itr->kind = sxcscript_kind_mul;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "div")) {
+            node_itr->kind = sxcscript_kind_div;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "mod")) {
+            node_itr->kind = sxcscript_kind_mod;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "not")) {
+            node_itr->kind = sxcscript_kind_not;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "and")) {
+            node_itr->kind = sxcscript_kind_and;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "eq")) {
+            node_itr->kind = sxcscript_kind_eq;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "lt")) {
+            node_itr->kind = sxcscript_kind_lt;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "return")) {
+            node_itr->kind = sxcscript_kind_return;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "read")) {
+            node_itr->kind = sxcscript_kind_read;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "write")) {
+            node_itr->kind = sxcscript_kind_write;
+        } else if (sxcscript_token_iseq_str(node_itr->token, "usleep")) {
+            node_itr->kind = sxcscript_kind_usleep;
+        }
+    }
+}
 void sxcscript_link(struct sxcscript_node* node, struct sxcscript_label* label, union sxcscript_mem* mem) {
 }
 void sxcscript_init(union sxcscript_mem* mem) {
@@ -159,7 +222,7 @@ void sxcscript_init(union sxcscript_mem* mem) {
     sxcscript_readfile(src);
     sxcscript_tokenize(src, token);
     sxcscript_parse(token, node, label);
-    sxcscript_analyze(node, mem);
+    sxcscript_analyze(node, label, mem);
     sxcscript_link(node, label, mem);
 }
 void sxcscript() {
