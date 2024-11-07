@@ -160,6 +160,7 @@ void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node,
 void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* label, union sxcscript_mem* mem) {
     struct sxcscript_token* local_token[sxcscript_compile_capacity];
     int local_offset[sxcscript_compile_capacity];
+    union sxcscript_mem* inst_itr = mem;
     int offset_size = 0;
     int local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
@@ -234,6 +235,22 @@ void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* labe
                     break;
                 }
             }
+        }
+    }
+    for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
+        if (node_itr->kind == sxcscript_kind_label) {
+            label[node_itr->val].inst_i = inst_itr - mem;
+        } else if (node_itr->kind == sxcscript_kind_const_get) {
+            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
+            *(inst_itr++) = (union sxcscript_mem){.val = node_itr->val};
+        } else if (node_itr->kind == sxcscript_kind_jmp || node_itr->kind == sxcscript_kind_jze) {
+            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
+            *(inst_itr++) = (union sxcscript_mem){.val = node_itr->val};
+        } else if (node_itr->kind == sxcscript_kind_call) {
+            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
+            *(inst_itr++) = (union sxcscript_mem){.val = sxcscript_analyze_toinst_searchlabel(label, label_size, node_itr)};
+        } else {
+            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
         }
     }
 }
