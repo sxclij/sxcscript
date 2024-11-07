@@ -112,6 +112,12 @@ int32_t sxcscript_token_to_int32(struct sxcscript_token* token) {
     }
     return is_neg ? -ret : ret;
 }
+void sxcscript_readfile(char* dst) {
+    int fd = open(sxcscript_path, O_RDONLY);
+    int dst_n = read(fd, dst, sxcscript_compile_size);
+    dst[dst_n] = '\0';
+    close(fd);
+}
 void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
     struct sxcscript_token* token_itr = token;
     *token_itr = (struct sxcscript_token){src, 0};
@@ -132,6 +138,7 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
             token_itr->size++;
         }
     }
+    *token_itr = (struct sxcscript_token){NULL, 0};
 }
 void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, union sxcscript_node_val val) {
     *((*node_itr)++) = (struct sxcscript_node){.kind = kind, .token = token, .val = val};
@@ -480,10 +487,7 @@ void sxcscript_init(union sxcscript_mem* mem) {
     struct sxcscript_token* local_token[sxcscript_compile_size / sizeof(struct sxcscript_token)];
     int local_offset[sxcscript_compile_size / sizeof(int)];
     int label_size = 0;
-    int fd = open(sxcscript_path, O_RDONLY);
-    int src_n = read(fd, src, sizeof(src) - 1);
-    src[src_n] = '\0';
-    close(fd);
+    sxcscript_readfile(src);
     sxcscript_tokenize(src, token);
     sxcscript_parse(token, node, label, &label_size);
     sxcscript_analyze(mem + sxcscript_global_size, node, local_token, local_offset, label, &label_size);
