@@ -1,3 +1,5 @@
-local_set(addr(a), 100)
-local_set(addr(b), 200)
-local_set(addr(c), add(a,b))
+fn main() (
+    local_set(addr(a), 100)
+    local_set(addr(b), 200)
+    local_set(addr(c), add(a,b))
+)

@@ -127,6 +127,36 @@ void sxcscript_parse_expr(struct sxcscript_token** token_itr, struct sxcscript_n
             }
         }
         (*token_itr)++;
+    } else if (sxcscript_token_iseq_str(*token_itr, "fn")) {
+        int fn_label = (*label_size)++;
+        int arg_size = 0;
+        (*token_itr)++;
+        label[fn_label].token = *token_itr;
+        *token_itr += 2;
+        while (!sxcscript_token_iseq_str(*token_itr, ")")) {
+            sxcscript_parse_push(node_itr, sxcscript_kind_const_get, *token_itr, 0);
+            (*token_itr)++;
+            arg_size++;
+            if (sxcscript_token_iseq_str(*token_itr, ",")) {
+                (*token_itr)++;
+            }
+        }
+        struct sxcscript_node* arg_itr = (*node_itr) - 1;
+        for (int i = 0; i < arg_size; i++) {
+            arg_itr->val = -4 - i;
+            arg_itr++;
+        }
+        (*token_itr)++;
+        sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, fn_label);
+        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, -2);
+        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, -2);
+        sxcscript_parse_push(node_itr, sxcscript_kind_local_get, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_const_get, NULL, 0 + arg_size);
+        sxcscript_parse_push(node_itr, sxcscript_kind_sub, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_local_set, NULL, 0);
+        sxcscript_parse_expr(token_itr, node_itr, label, label_size, break_i, continue_i);
+        sxcscript_parse_push(node_itr, sxcscript_kind_return, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_label_fnend, NULL, 0);
     } else if (sxcscript_token_iseq_str(*token_itr + 1, "(")) {
         struct sxcscript_token* token_this = *token_itr;
         (*token_itr)++;
@@ -214,7 +244,7 @@ void sxcscript_analyze(union sxcscript_mem* inst, struct sxcscript_node* node, s
             continue;
         }
         if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
-            (node_itr+1)->kind = sxcscript_kind_nop;
+            (node_itr + 1)->kind = sxcscript_kind_nop;
             enum bool is_neg = node_itr->token->data[0] == '-';
             int i = is_neg ? 1 : 0;
             int x = 0;
@@ -253,7 +283,7 @@ void sxcscript_analyze(union sxcscript_mem* inst, struct sxcscript_node* node, s
         } else if (node_itr->kind == sxcscript_kind_call) {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
             *(inst_itr++) = (union sxcscript_mem){.val = sxcscript_analyze_searchlabel(label, *label_size, node_itr)};
-        }else if(node_itr->kind == sxcscript_kind_nop){
+        } else if (node_itr->kind == sxcscript_kind_nop) {
             continue;
         } else {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
