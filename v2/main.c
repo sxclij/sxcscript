@@ -85,15 +85,6 @@ enum bool sxcscript_token_iseq_str(struct sxcscript_token* a, const char* str) {
     struct sxcscript_token b = (struct sxcscript_token){.data = str, .size = str_size};
     return sxcscript_token_iseq(a, &b);
 }
-int sxcscript_token_toint(struct sxcscript_token* token) {
-    enum bool is_neg = token->data[0] == '-';
-    int i = is_neg ? 1 : 0;
-    int x = 0;
-    for (; i < token->size; i++) {
-        x = (x * 10) + token->data[i] - '0';
-    }
-    return is_neg ? -x : x;
-}
 void sxcscript_run(union sxcscript_mem* mem) {
 }
 void sxcscript_readfile(char* dst) {
@@ -223,7 +214,13 @@ void sxcscript_analyze(union sxcscript_mem* inst, struct sxcscript_node* node, s
             continue;
         }
         if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
-            node_itr->val = sxcscript_token_toint(node_itr->token);
+            enum bool is_neg = node_itr->token->data[0] == '-';
+            int i = is_neg ? 1 : 0;
+            int x = 0;
+            for (; i < node_itr->token->size; i++) {
+                x = (x * 10) + node_itr->token->data[i] - '0';
+            }
+            node_itr->val = is_neg ? -x : x;
         } else {
             for (int i = 0;; i++) {
                 if (i == local_size) {
