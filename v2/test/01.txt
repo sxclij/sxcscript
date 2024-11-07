@@ -1,11 +1,6 @@
 main()
-end()
 
 fn main() (
-    local_set(addr(a), 100)
-    local_set(addr(b), 200)
-    local_set(addr(c), add(a,b))
-)
-fn end() (
-    loop()
+    global_set(addr(x), 48)
+    write(1, addr(x), 100)
 )

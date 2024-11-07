@@ -4,8 +4,8 @@
 
 #define sxcapp_stacksize (128 * 1024 * 1024)
 #define sxcscript_path "test/01.txt"
-#define sxcscript_mem_size (16 * 1024)     // デバッグ用に小さくしてるので後で戻す
-#define sxcscript_compile_size (2 * 1024)  // デバッグ用に小さくしてるので後で戻す
+#define sxcscript_mem_size (2*1024 * 1024)     // デバッグ用に小さくしてるので後で戻す
+#define sxcscript_compile_size (2*1024 * 1024)  // デバッグ用に小さくしてるので後で戻す
 #define sxcscript_global_size (4)
 
 enum bool {
