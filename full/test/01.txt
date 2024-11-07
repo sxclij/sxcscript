@@ -1,0 +1,1 @@
+local_set(addr(a), 100)
