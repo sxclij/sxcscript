@@ -4,9 +4,9 @@
 
 #define sxcapp_stacksize (128 * 1024 * 1024)
 #define sxcscript_path "test/01.txt"
-#define sxcscript_mem_size (16 * 1024 * 1024)
+#define sxcscript_mem_size (16 * 1024)     // デバッグ用に小さくしてるので後で戻す
 #define sxcscript_compile_size (2 * 1024)  // デバッグ用に小さくしてるので後で戻す
-#define sxcscript_global_size (1024)
+#define sxcscript_global_size (4)
 
 enum bool {
     false = 0,
@@ -156,7 +156,7 @@ int sxcscript_analyze_searchlabel(struct sxcscript_label* label, int label_size,
     }
     return -1;
 }
-void sxcscript_analyze(union sxcscript_mem* inst, struct sxcscript_node* node, struct sxcscript_token* local_token, int* local_offset, struct sxcscript_label* label, int* label_size) {
+void sxcscript_analyze(union sxcscript_mem* inst, struct sxcscript_node* node, struct sxcscript_token** local_token, int* local_offset, struct sxcscript_label* label, int* label_size) {
     union sxcscript_mem* inst_itr = inst;
     int offset_size = 0;
     int local_size = 0;
@@ -214,6 +214,7 @@ void sxcscript_analyze(union sxcscript_mem* inst, struct sxcscript_node* node, s
             continue;
         }
         if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
+            (node_itr+1)->kind = sxcscript_kind_nop;
             enum bool is_neg = node_itr->token->data[0] == '-';
             int i = is_neg ? 1 : 0;
             int x = 0;
@@ -251,7 +252,9 @@ void sxcscript_analyze(union sxcscript_mem* inst, struct sxcscript_node* node, s
             *(inst_itr++) = (union sxcscript_mem){.val = node_itr->val};
         } else if (node_itr->kind == sxcscript_kind_call) {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
-            *(inst_itr++) = (union sxcscript_mem){.val = sxcscript_analyze_searchlabel(label, label_size, node_itr)};
+            *(inst_itr++) = (union sxcscript_mem){.val = sxcscript_analyze_searchlabel(label, *label_size, node_itr)};
+        }else if(node_itr->kind == sxcscript_kind_nop){
+            continue;
         } else {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
         }
