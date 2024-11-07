@@ -145,7 +145,7 @@ void sxcscript_parse_expr(struct sxcscript_token** token_itr, struct sxcscript_n
         sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this, 0);
     } else {
         sxcscript_parse_push(node_itr, sxcscript_kind_const_get, *token_itr, 0);
-        sxcscript_parse_push(node_itr, sxcscript_kind_nop, *token_itr, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_local_get, *token_itr, 0);
         (*token_itr)++;
     }
 }
@@ -161,17 +161,9 @@ void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* labe
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
         if (node_itr->token == NULL) {
             continue;
-        } else if (sxcscript_token_iseq_str(node_itr->token, "const_get")) {
-            node_itr->kind = sxcscript_kind_const_get;
-            if (sxcscript_token_iseq_str((node_itr + 2)->token, "addr")) {
-                (node_itr + 1)->kind = sxcscript_kind_nop;
-                (node_itr + 2)->kind = sxcscript_kind_nop;
-            } else if (sxcscript_token_isdigit((node_itr)->token)) {
-                node_itr->val = sxcscript_token_toint(node_itr->token);
-                (node_itr + 1)->kind = sxcscript_kind_nop;
-            } else {
-                (node_itr + 1)->kind = sxcscript_kind_local_get;
-            }
+        } else if (sxcscript_token_iseq_str(node_itr->token, "addr")) {
+            node_itr->kind = sxcscript_kind_nop;
+            (node_itr - 1)->kind = sxcscript_kind_nop;
         } else if (sxcscript_token_iseq_str(node_itr->token, "local_get")) {
             node_itr->kind = sxcscript_kind_local_get;
         } else if (sxcscript_token_iseq_str(node_itr->token, "local_set")) {
