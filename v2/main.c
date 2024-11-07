@@ -158,6 +158,10 @@ void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node,
     }
 }
 void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* label, union sxcscript_mem* mem) {
+    struct sxcscript_token* local_token[sxcscript_compile_capacity];
+    int local_offset[sxcscript_compile_capacity];
+    int offset_size = 0;
+    int local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
         if (node_itr->token == NULL) {
             continue;
@@ -198,6 +202,38 @@ void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* labe
             node_itr->kind = sxcscript_kind_write;
         } else if (sxcscript_token_iseq_str(node_itr->token, "usleep")) {
             node_itr->kind = sxcscript_kind_usleep;
+        }
+    }
+    for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
+        if (node_itr->kind == sxcscript_kind_label_fnend) {
+            offset_size = 0;
+            local_size = 0;
+        }
+        if (node_itr->kind != sxcscript_kind_const_get) {
+            continue;
+        }
+        if (node_itr->token == NULL) {
+            continue;
+        }
+        if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
+            node_itr->val = sxcscript_token_toint(node_itr->token);
+        } else {
+            for (int i = 0;; i++) {
+                if (i == local_size) {
+                    local_token[local_size] = node_itr->token;
+                    if (node_itr->val != 0) {
+                        local_offset[local_size++] = node_itr->val;
+                    } else {
+                        local_offset[local_size++] = offset_size;
+                    }
+                    node_itr->val = offset_size++;
+                    break;
+                }
+                if (sxcscript_token_iseq(local_token[i], node_itr->token)) {
+                    node_itr->val = local_offset[i];
+                    break;
+                }
+            }
         }
     }
 }
