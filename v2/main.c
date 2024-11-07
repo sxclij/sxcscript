@@ -1,12 +1,14 @@
 #include <fcntl.h>
 #include <stdint.h>
+#include <sys/resource.h>
 #include <unistd.h>
 
 #define sxcscript_path "test/04.txt"
-#define sxcscript_mem_capacity (1 << 16)
-#define sxcscript_compile_capacity (1 << 16)
-#define sxcscript_buf_capacity (1 << 10)
-#define sxcscript_global_capacity (1 << 8)
+#define sxcscript_mem_size (1 << 16)
+#define sxcscript_compile_size (1 << 16)
+#define sxcscript_buf_size (1 << 10)
+#define sxcscript_global_size (1 << 8)
+#define sxcscript_stacksize (128 * 1014 * 1024)
 
 enum bool {
     false = 0,
@@ -70,10 +72,10 @@ union sxcscript_mem {
     int32_t val;
 };
 struct sxcscript {
-    union sxcscript_mem mem[sxcscript_mem_capacity];
-    struct sxcscript_token token[sxcscript_compile_capacity];
-    struct sxcscript_node node[sxcscript_compile_capacity];
-    struct sxcscript_label label[sxcscript_compile_capacity];
+    union sxcscript_mem mem[sxcscript_mem_size];
+    struct sxcscript_token token[sxcscript_compile_size];
+    struct sxcscript_node node[sxcscript_compile_size];
+    struct sxcscript_label label[sxcscript_compile_size];
     union sxcscript_mem* inst_begin;
     union sxcscript_mem* data_begin;
     int32_t label_size;
@@ -268,8 +270,8 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
     }
 }
 void sxcscript_analyze_var(struct sxcscript_node* node) {
-    struct sxcscript_token* local_token[sxcscript_buf_capacity];
-    int32_t local_offset[sxcscript_buf_capacity];
+    struct sxcscript_token* local_token[sxcscript_buf_size];
+    int32_t local_offset[sxcscript_buf_size];
     int32_t offset_size = 0;
     int32_t local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
@@ -351,18 +353,7 @@ void sxcscript_link(struct sxcscript* sxcscript) {
         }
     }
 }
-void sxcscript_init(struct sxcscript* sxcscript, const char* src) {
-    sxcscript->inst_begin = sxcscript->mem + sxcscript_global_capacity;
-    sxcscript->label_size = 0;
-    sxcscript_tokenize(src, sxcscript->token);
-    sxcscript_parse(sxcscript);
-    sxcscript_analyze(sxcscript);
-    sxcscript_link(sxcscript);
-    sxcscript->mem[sxcscript_global_ip].val = sxcscript->inst_begin - sxcscript->mem;
-    sxcscript->mem[sxcscript_global_sp].val = sxcscript->data_begin - sxcscript->mem + 256;
-    sxcscript->mem[sxcscript_global_bp].val = sxcscript->data_begin - sxcscript->mem;
-}
-void sxcscript_exec(struct sxcscript* sxcscript) {
+void sxcscript_run(struct sxcscript* sxcscript) {
     int32_t result;
     int32_t a1;
     int32_t a2;
@@ -480,21 +471,37 @@ void sxcscript_exec(struct sxcscript* sxcscript) {
         (sxcscript->mem[sxcscript_global_ip].val)++;
     }
 }
-int main() {
-    char src[sxcscript_compile_capacity];
-    static struct sxcscript sxcscript;
 
+void sxcscript_init(union sxcscript_mem* mem) {
+    char src[sxcscript_compile_size];
+    struct sxcscript_token token[sxcscript_compile_size / sizeof(struct sxcscript_token)];
+    struct sxcscript_node node[sxcscript_compile_size / sizeof(struct sxcscript_node)];
+    struct sxcscript_label label[sxcscript_compile_size / sizeof(struct sxcscript_label)];
+    struct sxcscript_token* local_token[sxcscript_compile_size / sizeof(struct sxcscript_token)];
+    int local_offset[sxcscript_compile_size / sizeof(int)];
+    int label_size = 0;
     int fd = open(sxcscript_path, O_RDONLY);
     int src_n = read(fd, src, sizeof(src) - 1);
     src[src_n] = '\0';
     close(fd);
-
-    sxcscript_init(&sxcscript, src);
-
-    sxcscript_exec(&sxcscript);
-
-    return 0;
+    sxcscript_tokenize(src, token);
+    sxcscript_parse(token, node, label, &label_size);
+    sxcscript_analyze(mem + sxcscript_global_size, node, local_token, local_offset, label, &label_size);
+    sxcscript_link(node, label, mem + sxcscript_global_size);
+    mem[sxcscript_global_ip].val = sxcscript_global_size;
+    mem[sxcscript_global_sp].val = sxcscript_global_size + 1100;
+    mem[sxcscript_global_bp].val = sxcscript_global_size + 1000;
 }
-
-    struct rlimit rlim = (struct rlimit){.rlim_cur = sxcapp_stacksize, .rlim_max = sxcapp_stacksize};
+void sxcscript() {
+    static union sxcscript_mem mem[sxcscript_mem_size];
+    sxcscript_init(mem);
+    sxcscript_run(mem);
+}
+void init() {
+    struct rlimit rlim = (struct rlimit){.rlim_cur = sxcscript_stacksize, .rlim_max = sxcscript_stacksize};
     setrlimit(RLIMIT_STACK, &rlim);
+}
+int main() {
+    init();
+    sxcscript();
+}
