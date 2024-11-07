@@ -5,7 +5,7 @@
 #define sxcapp_stacksize (128 * 1024 * 1024)
 #define sxcscript_path "test/01.txt"
 #define sxcscript_mem_size (16 * 1024 * 1024)
-#define sxcscript_compile_size (2 * 1024)   // デバッグ用に小さくしてるので後で戻す
+#define sxcscript_compile_size (2 * 1024)  // デバッグ用に小さくしてるので後で戻す
 #define sxcscript_global_size (1024)
 
 enum bool {
@@ -129,11 +129,11 @@ void sxcscript_tokenize(char* src, struct sxcscript_token* token) {
 void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, int val) {
     *((*node_itr)++) = (struct sxcscript_node){.kind = kind, .token = token, .val = val};
 }
-void sxcscript_parse_expr(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label** label_itr, struct sxcscript_label* label, int break_i, int continue_i) {
+void sxcscript_parse_expr(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int break_i, int continue_i) {
     if (sxcscript_token_iseq_str(*token_itr, "(")) {
         (*token_itr)++;
         while (!sxcscript_token_iseq_str(*token_itr, ")")) {
-            sxcscript_parse_expr(token_itr, node_itr, label_itr, label, break_i, continue_i);
+            sxcscript_parse_expr(token_itr, node_itr, label, label_size, break_i, continue_i);
             if (sxcscript_token_iseq_str(*token_itr, ",")) {
                 (*token_itr)++;
             }
@@ -142,7 +142,7 @@ void sxcscript_parse_expr(struct sxcscript_token** token_itr, struct sxcscript_n
     } else if (sxcscript_token_iseq_str(*token_itr + 1, "(")) {
         struct sxcscript_token* token_this = *token_itr;
         (*token_itr)++;
-        sxcscript_parse_expr(token_itr, node_itr, label_itr, label, break_i, continue_i);
+        sxcscript_parse_expr(token_itr, node_itr, label, label_size, break_i, continue_i);
         sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this, 0);
     } else {
         sxcscript_parse_push(node_itr, sxcscript_kind_const_get, *token_itr, 0);
@@ -150,12 +150,11 @@ void sxcscript_parse_expr(struct sxcscript_token** token_itr, struct sxcscript_n
         (*token_itr)++;
     }
 }
-void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node, struct sxcscript_label* label) {
+void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node, struct sxcscript_label* label, int* label_size) {
     struct sxcscript_token* token_itr = token;
     struct sxcscript_node* node_itr = node;
-    struct sxcscript_label* label_itr = label;
     while (token_itr->data != NULL) {
-        sxcscript_parse_expr(&token_itr, &node_itr, &label_itr, label, -1, -1);
+        sxcscript_parse_expr(&token_itr, &node_itr, label, label_size, -1, -1);
     }
 }
 int sxcscript_analyze_searchlabel(struct sxcscript_label* label, int label_size, struct sxcscript_node* node) {
@@ -169,10 +168,8 @@ int sxcscript_analyze_searchlabel(struct sxcscript_label* label, int label_size,
     }
     return -1;
 }
-void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* label, union sxcscript_mem* mem) {
-    struct sxcscript_token* local_token[sxcscript_compile_size];
-    int local_offset[sxcscript_compile_size];
-    union sxcscript_mem* inst_itr = mem;
+void sxcscript_analyze(struct sxcscript_node* node, struct sxcscript_label* label, struct sxcscript_token* local_token, int* local_offset, union sxcscript_mem* mem) {
+    union sxcscript_mem* inst_itr = mem + sxcscript_global_size;
     int offset_size = 0;
     int local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
@@ -273,13 +270,15 @@ void sxcscript_init(union sxcscript_mem* mem) {
     struct sxcscript_token token[sxcscript_compile_size / sizeof(struct sxcscript_token)];
     struct sxcscript_node node[sxcscript_compile_size / sizeof(struct sxcscript_node)];
     struct sxcscript_label label[sxcscript_compile_size / sizeof(struct sxcscript_label)];
+    struct sxcscript_token* local_token[sxcscript_compile_size / sizeof(struct sxcscript_token)];
+    int local_offset[sxcscript_compile_size / sizeof(int)];
     union sxcscript_mem* global_begin;
     union sxcscript_mem* inst_begin;
     union sxcscript_mem* data_begin;
     sxcscript_readfile(src);
     sxcscript_tokenize(src, token);
     sxcscript_parse(token, node, label);
-    sxcscript_analyze(node, label, mem);
+    sxcscript_analyze(node, label, mem, local_token, local_offset);
     sxcscript_link(node, label, mem);
 }
 void sxcscript() {
