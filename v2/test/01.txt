@@ -1,6 +1,6 @@
 main()
 
 fn main() (
-    global_set(addr(x), 48)
-    write(1, addr(x), 100)
+    local_set(x, 48)
+    write(1, add(x, global_get(2)), 100)
 )
