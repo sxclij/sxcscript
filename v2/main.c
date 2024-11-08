@@ -29,6 +29,7 @@ enum sxcscript_kind {
     sxcscript_kind_local_set,
     sxcscript_kind_global_get,
     sxcscript_kind_global_set,
+    sxcscript_kind_addr,
     sxcscript_kind_add,
     sxcscript_kind_sub,
     sxcscript_kind_mul,
@@ -223,6 +224,7 @@ void sxcscript_parse_expr(struct sxcscript_label* label, struct sxcscript_node**
         sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this, (union sxcscript_node_val){0});
     } else {
         sxcscript_parse_push(node_itr, sxcscript_kind_const_get, token_this, (union sxcscript_node_val){0});
+        sxcscript_parse_push(node_itr, sxcscript_kind_local_get, token_this, (union sxcscript_node_val){0});
         (*token_itr)++;
     }
 }
@@ -237,6 +239,9 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
         if (node_itr->token == NULL) {
             continue;
+        } else if (sxcscript_token_eq_str(node_itr->token, "addr")) {
+            node_itr->kind = sxcscript_kind_addr;
+            (node_itr - 1)->kind = sxcscript_kind_nop;
         } else if (sxcscript_token_eq_str(node_itr->token, "const_get")) {
             node_itr->kind = sxcscript_kind_const_get;
         } else if (sxcscript_token_eq_str(node_itr->token, "local_get")) {
@@ -294,6 +299,7 @@ void sxcscript_analyze_var(struct sxcscript_node* node) {
         }
         if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
             node_itr->val.literal = sxcscript_token_to_int32(node_itr->token);
+            (node_itr + 1)->kind = sxcscript_kind_nop;
         } else {
             for (int i = 0;; i++) {
                 if (i == local_size) {
@@ -339,6 +345,8 @@ void sxcscript_analyze_toinst(union sxcscript_mem* mem, struct sxcscript_node* n
         } else if (node_itr->kind == sxcscript_kind_call) {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
             *(inst_itr++) = (union sxcscript_mem){.val = sxcscript_analyze_toinst_searchlabel(label, *label_size, node_itr)};
+        } else if (node_itr->kind == sxcscript_kind_nop) {
+            continue;
         } else {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
         }
@@ -386,6 +394,9 @@ void sxcscript_run(union sxcscript_mem* mem) {
             case sxcscript_kind_global_set:
                 mem[mem[mem[sxcscript_global_sp].val - 2].val].val = mem[mem[sxcscript_global_sp].val - 1].val;
                 mem[sxcscript_global_sp].val -= 2;
+                break;
+            case sxcscript_kind_addr:
+                mem[(mem[sxcscript_global_sp].val - 1)].val = mem[sxcscript_global_bp].val + mem[mem[sxcscript_global_sp].val - 1].val;
                 break;
             case sxcscript_kind_add:
                 mem[mem[sxcscript_global_sp].val - 2].val += mem[mem[sxcscript_global_sp].val - 1].val;

@@ -1,6 +1,10 @@
 main()
+eternal_sleep()
 
 fn main() (
-    local_set(x, 48)
-    write(1, add(x, global_get(2)), 100)
+    global_set(addr(x), 48)
+    write(1, addr(x), 100)
+)
+fn eternal_sleep() (
+    loop()
 )
