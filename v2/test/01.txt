@@ -2,8 +2,9 @@ main()
 eternal_sleep()
 
 fn main() (
-    global_set(addr(x), 48)
-    write(1, addr(x), 100)
+    set(addr(x), 48)
+    set(addr(p), addr(x))
+    write(1, p, 1)
 )
 fn eternal_sleep() (
     loop()

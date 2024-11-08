@@ -242,16 +242,16 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
         } else if (sxcscript_token_eq_str(node_itr->token, "addr")) {
             node_itr->kind = sxcscript_kind_addr;
             (node_itr - 1)->kind = sxcscript_kind_nop;
+        } else if (sxcscript_token_eq_str(node_itr->token, "deref")) {
+            node_itr->kind = sxcscript_kind_global_get;
+        } else if (sxcscript_token_eq_str(node_itr->token, "set")) {
+            node_itr->kind = sxcscript_kind_global_set;
         } else if (sxcscript_token_eq_str(node_itr->token, "const_get")) {
             node_itr->kind = sxcscript_kind_const_get;
         } else if (sxcscript_token_eq_str(node_itr->token, "local_get")) {
             node_itr->kind = sxcscript_kind_local_get;
         } else if (sxcscript_token_eq_str(node_itr->token, "local_set")) {
             node_itr->kind = sxcscript_kind_local_set;
-        } else if (sxcscript_token_eq_str(node_itr->token, "global_get")) {
-            node_itr->kind = sxcscript_kind_global_get;
-        } else if (sxcscript_token_eq_str(node_itr->token, "global_set")) {
-            node_itr->kind = sxcscript_kind_global_set;
         } else if (sxcscript_token_eq_str(node_itr->token, "add")) {
             node_itr->kind = sxcscript_kind_add;
         } else if (sxcscript_token_eq_str(node_itr->token, "sub")) {
