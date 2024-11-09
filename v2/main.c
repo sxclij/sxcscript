@@ -300,26 +300,27 @@ void sxcscript_analyze_var(struct sxcscript_node* node) {
         if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
             node_itr->val.literal = sxcscript_token_to_int32(node_itr->token);
             (node_itr + 1)->kind = sxcscript_kind_nop;
-        } else {
-            for (int i = 0;; i++) {
-                if (i == local_size) {
-                    local_token[local_size] = node_itr->token;
-                    if (node_itr->val.literal != 0) {
-                        local_offset[local_size++] = node_itr->val.literal;
-                    } else {
-                        local_offset[local_size++] = offset_size;
-                    }
-                    node_itr->val.literal = offset_size++;
-                    break;
+            continue;
+        }
+        for (int i = 0;; i++) {
+            if (i == local_size) {
+                local_token[local_size] = node_itr->token;
+                if (node_itr->val.literal != 0) {
+                    local_offset[local_size++] = node_itr->val.literal;
+                } else {
+                    local_offset[local_size++] = offset_size;
                 }
-                if (sxcscript_token_eq(local_token[i], node_itr->token)) {
-                    node_itr->val.literal = local_offset[i];
-                    break;
-                }
+                node_itr->val.literal = offset_size++;
+                break;
+            }
+            if (sxcscript_token_eq(local_token[i], node_itr->token)) {
+                node_itr->val.literal = local_offset[i];
+                break;
             }
         }
     }
 }
+
 int sxcscript_analyze_toinst_searchlabel(struct sxcscript_label* label, int label_size, struct sxcscript_node* node) {
     for (int i = 0; i < label_size; i++) {
         if (label[i].token == NULL) {
