@@ -11,6 +11,10 @@ fn print_int(x) (
         putc(45)
         set(addr(x), x.mul(-1))
     )
+    if(x.eq(0)) (
+        putc(48)
+        return(0)
+    )
     loop(
         if(x.div(m).eq(0).not()) (
             break
@@ -32,7 +36,17 @@ fn eternal_sleep() (
     loop()
 )
 
+fn vec_make(capacity) (
+    set(addr(ret), local_get(-2))
+    print_int(ret)
+    print_endl()
+    set(1011, 10000)
+    return(ret)
+)
+
 fn main() (
-    print_int(-114514)
+    set(addr(v), vec_make(114514))
+    print_int(v)
+    div(11,1)
     print_endl()
 )
