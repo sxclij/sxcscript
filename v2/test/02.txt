@@ -1,0 +1,39 @@
+main()
+eternal_sleep()
+
+fn putc(ch) (
+    write(1, addr(ch), 1)
+)
+fn print_int(x) (
+    set(addr(a), 0)
+    set(addr(m), 1000000000)
+    set(addr(notzero), 0)
+    if(x.lt(0)) (
+        set(addr(status), putc(45))
+        set(addr(x), x.mul(-1))
+    )
+    loop(
+        if(x.div(m).eq(0).not()) (
+            break
+        )
+        set(addr(m), m.div(10))
+    )
+    loop(
+        if(m.eq(0)) (
+            return(0)
+        )
+        putc(x.div(m).mod(10).add(48))
+        set(addr(m), m.div(10))
+    )
+)
+fn print_endl() (
+    putc(10)
+)
+fn eternal_sleep() (
+    loop()
+)
+
+fn main() (
+    print_int(-114514)
+    print_endl()
+)

@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/01.txt"
+#define sxcscript_path "test/02.txt"
 #define sxcscript_mem_size (1 << 16)
 #define sxcscript_compile_size (1 << 16)
 #define sxcscript_buf_size (1 << 10)
