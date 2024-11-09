@@ -218,7 +218,7 @@ void sxcscript_parse_expr(struct sxcscript_label* label, struct sxcscript_node**
     } else if (sxcscript_token_eq_str(token_this, "continue")) {
         (*token_itr)++;
         sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = continue_i});
-    }else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
+    } else if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
         (*token_itr)++;
         sxcscript_parse_expr(label, node_itr, token_itr, label_size, break_i, continue_i);
         sxcscript_parse_push(node_itr, sxcscript_kind_call, token_this, (union sxcscript_node_val){0});
