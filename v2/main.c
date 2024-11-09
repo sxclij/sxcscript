@@ -281,9 +281,7 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
         }
     }
 }
-void sxcscript_analyze_var(struct sxcscript_node* node) {
-    struct sxcscript_token* local_token[sxcscript_buf_size];
-    int local_offset[sxcscript_buf_size];
+void sxcscript_analyze_var(struct sxcscript_node* node, struct sxcscript_token** local_token, int* local_offset) {
     int offset_size = 0;
     int local_size = 0;
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
@@ -358,7 +356,7 @@ void sxcscript_analyze_toinst(union sxcscript_mem* mem, struct sxcscript_node* n
 }
 void sxcscript_analyze(union sxcscript_mem* mem, struct sxcscript_node* node, struct sxcscript_token** local_token, int* local_offset, struct sxcscript_label* label, int* label_size) {
     sxcscript_analyze_primitive(node);
-    sxcscript_analyze_var(node);
+    sxcscript_analyze_var(node, local_token, local_offset);
     sxcscript_analyze_toinst(mem, node, label, label_size);
 }
 void sxcscript_link(union sxcscript_mem* mem, struct sxcscript_label* label) {
