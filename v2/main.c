@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/03.txt"
+#define sxcscript_path "test/04.txt"
 #define sxcscript_mem_size (1 << 16)
 #define sxcscript_compile_size (1 << 16)
 #define sxcscript_buf_size (1 << 10)
@@ -212,12 +212,11 @@ void sxcscript_parse_expr(struct sxcscript_label* label, struct sxcscript_node**
         sxcscript_parse_expr(label, node_itr, token_itr, label_size, end_label, start_label);
         sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = start_label});
         sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, (union sxcscript_node_val){.label_i = end_label});
-    }else if (sxcscript_token_eq_str(token_this, "return")) {
+    } else if (sxcscript_token_eq_str(token_this, "return")) {
         (*token_itr)++;
         sxcscript_parse_expr(label, node_itr, token_itr, label_size, break_i, continue_i);
         sxcscript_parse_push(node_itr, sxcscript_kind_return, NULL, (union sxcscript_node_val){0});
-    } 
-    else if (sxcscript_token_eq_str(token_this, "break")) {
+    } else if (sxcscript_token_eq_str(token_this, "break")) {
         (*token_itr)++;
         sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, (union sxcscript_node_val){.label_i = break_i});
     } else if (sxcscript_token_eq_str(token_this, "continue")) {
@@ -247,7 +246,7 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
         } else if (sxcscript_token_eq_str(node_itr->token, "addr")) {
             node_itr->kind = sxcscript_kind_addr;
             (node_itr - 1)->kind = sxcscript_kind_nop;
-        } else if (sxcscript_token_eq_str(node_itr->token, "deref")) {
+        } else if (sxcscript_token_eq_str(node_itr->token, "get")) {
             node_itr->kind = sxcscript_kind_global_get;
         } else if (sxcscript_token_eq_str(node_itr->token, "set")) {
             node_itr->kind = sxcscript_kind_global_set;
@@ -275,7 +274,7 @@ void sxcscript_analyze_primitive(struct sxcscript_node* node) {
             node_itr->kind = sxcscript_kind_eq;
         } else if (sxcscript_token_eq_str(node_itr->token, "lt")) {
             node_itr->kind = sxcscript_kind_lt;
-        }else if (sxcscript_token_eq_str(node_itr->token, "read")) {
+        } else if (sxcscript_token_eq_str(node_itr->token, "read")) {
             node_itr->kind = sxcscript_kind_read;
         } else if (sxcscript_token_eq_str(node_itr->token, "write")) {
             node_itr->kind = sxcscript_kind_write;
@@ -441,11 +440,13 @@ void sxcscript_run(union sxcscript_mem* mem) {
             case sxcscript_kind_jze:
                 if (mem[mem[sxcscript_global_sp].val - 1].val == 0) {
                     mem[sxcscript_global_ip].val = mem[mem[sxcscript_global_ip].val + 1].val - 1;
+                } else {
+                    mem[sxcscript_global_ip].val += 1;
                 }
                 mem[sxcscript_global_sp].val -= 1;
                 break;
             case sxcscript_kind_call:
-                mem[(mem[sxcscript_global_sp].val) + 0].val = mem[sxcscript_global_ip].val;
+                mem[(mem[sxcscript_global_sp].val) + 0].val = mem[sxcscript_global_ip].val + 1;
                 mem[(mem[sxcscript_global_sp].val) + 1].val = mem[sxcscript_global_sp].val;
                 mem[(mem[sxcscript_global_sp].val) + 2].val = mem[sxcscript_global_bp].val;
                 mem[sxcscript_global_ip].val = mem[mem[sxcscript_global_ip].val + 1].val - 1;
