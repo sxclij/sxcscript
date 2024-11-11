@@ -535,7 +535,7 @@ void sxcscript_init(union sxcscript_mem* mem) {
     sxcscript_parse(token, node, label, &label_size);
     sxcscript_analyze(mem, node, local_token, local_offset, label, &label_size);
     sxcscript_link(mem, label);
-    // sxcscript_out(mem);
+    sxcscript_out(mem);
 }
 void sxcscript() {
     static union sxcscript_mem mem[sxcscript_mem_size];
