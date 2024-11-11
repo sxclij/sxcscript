@@ -80,9 +80,9 @@ fn helloworld() (
 )
 
 fn main() (
-    set(addr(ip), 0)
-    set(addr(sp), 1)
-    set(addr(bp), 2)
+    set(addr(ip), 1)
+    set(addr(sp), 2)
+    set(addr(bp), 3)
     set(sp, get(sp).add(1000))
     set(addr(v), get(bp).add(100))
     set(addr(s), helloworld())

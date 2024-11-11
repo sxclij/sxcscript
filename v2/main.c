@@ -46,9 +46,10 @@ enum sxcscript_kind {
     sxcscript_kind_usleep,
 };
 enum sxcscript_global {
-    sxcscript_global_ip = 0,
-    sxcscript_global_sp = 1,
-    sxcscript_global_bp = 2,
+    sxcscript_global_null = 0,
+    sxcscript_global_ip = 1,
+    sxcscript_global_sp = 2,
+    sxcscript_global_bp = 3,
 };
 struct sxcscript_token {
     const char* data;
@@ -533,7 +534,7 @@ void sxcscript_init(union sxcscript_mem* mem) {
     sxcscript_parse(token, node, label, &label_size);
     sxcscript_analyze(mem, node, local_token, local_offset, label, &label_size);
     sxcscript_link(mem, label);
-    sxcscript_out(mem);
+    // sxcscript_out(mem);
 }
 void sxcscript() {
     static union sxcscript_mem mem[sxcscript_mem_size];
