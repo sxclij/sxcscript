@@ -484,7 +484,8 @@ void sxcscript_run(union sxcscript_mem* mem) {
                 mem[sxcscript_global_ip].val = mem[mem[sxcscript_global_bp].val - 3].val;
                 mem[sxcscript_global_sp].val = mem[mem[sxcscript_global_bp].val - 2].val;
                 mem[sxcscript_global_bp].val = mem[mem[sxcscript_global_bp].val - 1].val;
-                mem[(mem[sxcscript_global_sp].val)++].val = result;
+                mem[mem[sxcscript_global_sp].val].val = result;
+                mem[sxcscript_global_sp].val++;
                 break;
             case sxcscript_kind_open:
                 a1 = mem[mem[sxcscript_global_sp].val - 2].val;
