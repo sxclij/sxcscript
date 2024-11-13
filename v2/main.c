@@ -376,7 +376,7 @@ void sxcscript_out_push(char* buf, int* buf_size, char ch) {
     buf[(*buf_size)++] = ch;
 }
 void sxcscript_out(union sxcscript_mem* mem, char* buf) {
-    int fd = open("Scratch.txt", (O_WRONLY | O_CREAT));
+    int fd = open("Scratch.txt", (O_WRONLY | O_CREAT | O_TRUNC));
     int buf_size = 0;
     for (int i = 1; i < 200000; i++) {
         int x = mem[i].val;
