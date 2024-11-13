@@ -4,8 +4,8 @@
 
 #define stacksize (128 * 1014 * 1024)
 #define sxcscript_path "test/04.txt"
-#define sxcscript_mem_size (1 << 18)
-#define sxcscript_compile_size (1 << 18)
+#define sxcscript_mem_size (1 << 20)
+#define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
 #define sxcscript_global_size (1 << 8)
 #define sxcscript_stack_size (1 << 8)
@@ -372,17 +372,22 @@ void sxcscript_link(union sxcscript_mem* mem, struct sxcscript_label* label) {
         }
     }
 }
-void sxcscript_out(union sxcscript_mem* mem) {
-    int fd = open("out.txt", (O_WRONLY | O_CREAT));
-    for (int i = 0; i < 200000; i++) {
+void sxcscript_out_push(char* buf, int* buf_size, char ch) {
+    buf[(*buf_size)++] = ch;
+}
+void sxcscript_out(union sxcscript_mem* mem, char* buf) {
+    int fd = open("Scratch.txt", (O_WRONLY | O_CREAT));
+    int buf_size = 0;
+    for (int i = 1; i < 200000; i++) {
         int x = mem[i].val;
         int m = 1000000000;
         if (x == 0) {
-            write(fd, "0\n", 2);
+            sxcscript_out_push(buf, &buf_size, '0');
+            sxcscript_out_push(buf, &buf_size, '\n');
             continue;
         }
         if (x < 0) {
-            write(fd, "-", 1);
+            sxcscript_out_push(buf, &buf_size, '-');
             x = -x;
         }
         while (x / m == 0) {
@@ -390,11 +395,12 @@ void sxcscript_out(union sxcscript_mem* mem) {
         }
         while (m != 0) {
             char ch = x / m % 10 + 48;
-            write(fd, &ch, 1);
+            sxcscript_out_push(buf, &buf_size, ch);
             m /= 10;
         }
-        write(fd, "\n", 1);
+        sxcscript_out_push(buf, &buf_size, '\n');
     }
+    write(fd, buf, buf_size);
     close(fd);
 }
 void sxcscript_run(union sxcscript_mem* mem) {
@@ -524,6 +530,7 @@ void sxcscript_run(union sxcscript_mem* mem) {
 
 void sxcscript_init(union sxcscript_mem* mem) {
     char src[sxcscript_compile_size];
+    char buf[sxcscript_compile_size];
     struct sxcscript_token token[sxcscript_compile_size / sizeof(struct sxcscript_token)];
     struct sxcscript_node node[sxcscript_compile_size / sizeof(struct sxcscript_node)];
     struct sxcscript_label label[sxcscript_compile_size / sizeof(struct sxcscript_label)];
@@ -535,7 +542,7 @@ void sxcscript_init(union sxcscript_mem* mem) {
     sxcscript_parse(token, node, label, &label_size);
     sxcscript_analyze(mem, node, local_token, local_offset, label, &label_size);
     sxcscript_link(mem, label);
-    sxcscript_out(mem);
+    sxcscript_out(mem, buf);
 }
 void sxcscript() {
     static union sxcscript_mem mem[sxcscript_mem_size];
