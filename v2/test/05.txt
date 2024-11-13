@@ -1,0 +1,48 @@
+main()
+eternal_sleep()
+
+fn eternal_sleep() (
+    loop()
+)
+fn putc(ch) (
+    write(1, addr(ch), 1)
+)
+fn print_endl() (
+    putc(10)
+)
+fn print_int(x) (
+    set(addr(m), 1000000000)
+    if(x.lt(0)) (
+        putc(45)
+        set(addr(x), x.mul(-1))
+    )
+    if(x.eq(0)) (
+        putc(48)
+        return(0)
+    )
+    loop(
+        if(x.div(m).eq(0).not()) (
+            break
+        )
+        set(addr(m), m.div(10))
+    )
+    loop(
+        if(m.eq(0)) (
+            return(0)
+        )
+        putc(x.div(m).mod(10).add(48))
+        set(addr(m), m.div(10))
+    )
+)
+fn allocate(dst, size) (
+    set(addr(ret_sp), sub(get(3), 2))
+    set(ret_sp, add(get(ret_sp), size))
+    set(dst, ret_sp)
+)
+
+fn main() (
+    allocate(addr(v), 1000)
+    set(add(v, 1), 114514)
+    set(addr(s), print_int(get(add(v, 1))))
+    set(addr(s), print_endl())
+)
