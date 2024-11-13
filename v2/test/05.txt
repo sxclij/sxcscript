@@ -4,6 +4,11 @@ eternal_sleep()
 fn eternal_sleep() (
     loop()
 )
+fn allocate(dst, size) (
+    set(addr(ret_sp), sub(get(3), 2))
+    set(ret_sp, add(get(ret_sp), size))
+    set(dst, ret_sp)
+)
 fn putc(ch) (
     write(1, addr(ch), 1)
 )
@@ -34,15 +39,39 @@ fn print_int(x) (
         set(addr(m), m.div(10))
     )
 )
-fn allocate(dst, size) (
-    set(addr(ret_sp), sub(get(3), 2))
-    set(ret_sp, add(get(ret_sp), size))
-    set(dst, ret_sp)
+fn vec_init(v) (
+    set(v, 0)
+)
+fn vec_push(v, x) (
+    set(v, add(get(v), 1))
+    set(add(v, get(v)), x)
+)
+fn vec_get(v, i) (
+    return(get(add(add(v, 1), i)))
 )
 
 fn main() (
-    allocate(addr(v), 1000)
-    set(add(v, 1), 114514)
-    set(addr(s), print_int(get(add(v, 1))))
-    set(addr(s), print_endl())
+    set(addr(a_capacity), 10)
+
+    allocate(addr(a), a_capacity)
+    set(addr(status), vec_init(a))
+
+    set(addr(i), 0)
+    loop(
+        if(i.eq(a_capacity)) (
+            break
+        )
+        set(addr(status), a.vec_push(mul(i, 3)))
+        set(addr(i), add(i, 1))
+    )
+
+    set(addr(i), 0)
+    loop(
+        if(i.eq(a_capacity)) (
+            break
+        )
+        set(addr(status), print_int(a.vec_get(i)))
+        set(addr(status), print_endl())
+        set(addr(i), add(i, 1))
+    )
 )
