@@ -142,6 +142,10 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
     }
     *token_itr = (struct sxcscript_token){NULL, 0};
 }
+void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node, struct sxcscript_label* label, int* label_size) {
+    struct sxcscript_token* token_itr = token;
+    struct sxcscript_node* node_itr = node;
+}
 void sxcscript_analyze_var(struct sxcscript_node* node, struct sxcscript_token** local_token, int* local_offset) {
     int offset_size = 0;
     int local_size = 0;
