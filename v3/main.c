@@ -179,7 +179,6 @@ void sxcscript_analyze_var(struct sxcscript_node* node, struct sxcscript_token**
         }
     }
 }
-
 int sxcscript_analyze_toinst_searchlabel(struct sxcscript_label* label, int label_size, struct sxcscript_node* node) {
     for (int i = 0; i < label_size; i++) {
         if (label[i].token == NULL) {
