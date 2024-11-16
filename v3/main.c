@@ -55,14 +55,10 @@ struct sxcscript_token {
     const char* data;
     int size;
 };
-union sxcscript_node_val {
-    int label_i;
-    int literal;
-};
 struct sxcscript_node {
     enum sxcscript_kind kind;
     struct sxcscript_token* token;
-    union sxcscript_node_val val;
+    int val;
 };
 struct sxcscript_label {
     struct sxcscript_token* token;
@@ -146,81 +142,7 @@ void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node,
     struct sxcscript_token* token_itr = token;
     struct sxcscript_node* node_itr = node;
 }
-void sxcscript_analyze_var(struct sxcscript_node* node, struct sxcscript_token** local_token, int* local_offset) {
-    int offset_size = 0;
-    int local_size = 0;
-    for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
-        if (node_itr->kind == sxcscript_kind_label_fnend) {
-            offset_size = 0;
-            local_size = 0;
-        }
-        if (node_itr->kind != sxcscript_kind_const_get) {
-            continue;
-        }
-        if (node_itr->token == NULL) {
-            continue;
-        }
-        if (('0' <= node_itr->token->data[0] && node_itr->token->data[0] <= '9') || node_itr->token->data[0] == '-') {
-            node_itr->val.literal = sxcscript_token_to_int32(node_itr->token);
-            (node_itr + 1)->kind = sxcscript_kind_nop;
-            continue;
-        }
-        for (int i = 0;; i++) {
-            if (i == local_size) {
-                local_token[local_size] = node_itr->token;
-                if (node_itr->val.literal != 0) {
-                    local_offset[local_size++] = node_itr->val.literal;
-                } else {
-                    local_offset[local_size++] = offset_size;
-                }
-                node_itr->val.literal = offset_size++;
-                break;
-            }
-            if (sxcscript_token_eq(local_token[i], node_itr->token)) {
-                node_itr->val.literal = local_offset[i];
-                break;
-            }
-        }
-    }
-}
-int sxcscript_analyze_toinst_searchlabel(struct sxcscript_label* label, int label_size, struct sxcscript_node* node) {
-    for (int i = 0; i < label_size; i++) {
-        if (label[i].token == NULL) {
-            continue;
-        }
-        if (sxcscript_token_eq(label[i].token, node->token)) {
-            return i;
-        }
-    }
-    return -1;
-}
-void sxcscript_analyze_toinst(union sxcscript_mem* mem, struct sxcscript_node* node, struct sxcscript_label* label, int* label_size) {
-    union sxcscript_mem* inst_itr = mem + sxcscript_global_size;
-    for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
-        if (node_itr->kind == sxcscript_kind_label) {
-            label[node_itr->val.label_i].inst_i = inst_itr - mem;
-        } else if (node_itr->kind == sxcscript_kind_const_get) {
-            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
-            *(inst_itr++) = (union sxcscript_mem){.val = node_itr->val.literal};
-        } else if (node_itr->kind == sxcscript_kind_jmp || node_itr->kind == sxcscript_kind_jze) {
-            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
-            *(inst_itr++) = (union sxcscript_mem){.val = node_itr->val.label_i};
-        } else if (node_itr->kind == sxcscript_kind_call) {
-            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
-            *(inst_itr++) = (union sxcscript_mem){.val = sxcscript_analyze_toinst_searchlabel(label, *label_size, node_itr)};
-        } else if (node_itr->kind == sxcscript_kind_nop) {
-            continue;
-        } else {
-            *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
-        }
-    }
-    mem[sxcscript_global_ip].val = sxcscript_global_size;
-    mem[sxcscript_global_bp].val = inst_itr - mem;
-    mem[sxcscript_global_sp].val = inst_itr - mem + sxcscript_stack_size;
-}
 void sxcscript_analyze(union sxcscript_mem* mem, struct sxcscript_node* node, struct sxcscript_token** local_token, int* local_offset, struct sxcscript_label* label, int* label_size) {
-    sxcscript_analyze_var(node, local_token, local_offset);
-    sxcscript_analyze_toinst(mem, node, label, label_size);
 }
 void sxcscript_link(union sxcscript_mem* mem, struct sxcscript_label* label) {
     for (union sxcscript_mem* inst_itr = mem + sxcscript_global_size; inst_itr->kind != sxcscript_kind_null; inst_itr++) {

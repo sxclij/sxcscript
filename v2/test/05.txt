@@ -53,7 +53,7 @@ fn vec_get(v, i) (
 fn main() (
     set(addr(a_capacity), 10)
 
-    allocate(addr(a), add(a_capacity, 3))
+    allocate(addr(a), add(a_capacity, 10))
     set(addr(status), vec_init(a))
 
     set(addr(i), 0)
