@@ -141,6 +141,9 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
             token_itr->size++;
         }
     }
+    if (token_itr->size != 0) {
+        token_itr++;
+    }
     *token_itr = (struct sxcscript_token){NULL, 0};
 }
 void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, int val) {
