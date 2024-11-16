@@ -17,8 +17,11 @@ enum bool {
 enum sxcscript_kind {
     sxcscript_kind_null,
     sxcscript_kind_nop,
-    sxcscript_kind_const_push,
-    sxcscript_kind_local_push,
+    sxcscript_kind_push_const,
+    sxcscript_kind_push_varaddr,
+    sxcscript_kind_test01,
+    sxcscript_kind_test02,
+    sxcscript_kind_test03,
     sxcscript_kind_global_get,
     sxcscript_kind_global_set,
     sxcscript_kind_call,
@@ -158,10 +161,10 @@ void sxcscript_parse_primary(struct sxcscript_token** token_itr, struct sxcscrip
         *token_itr += 1;
     }
     if (sxcscript_isdigit((*token_itr)->data)) {
-        sxcscript_parse_push(node_itr, sxcscript_kind_const_push, *token_itr, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_push_const, *token_itr, 0);
         *token_itr += 1;
     } else {
-        sxcscript_parse_push(node_itr, sxcscript_kind_local_push, *token_itr, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_push_varaddr, *token_itr, 0);
         sxcscript_parse_push(node_itr, sxcscript_kind_global_get, NULL, 0);
         *token_itr += 1;
     }
@@ -172,7 +175,7 @@ void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscrip
 void sxcscript_parse_unary(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
     if (sxcscript_token_eq_str(*token_itr, "&")) {
         *token_itr += 1;
-        sxcscript_parse_push(node_itr, sxcscript_kind_local_push, *token_itr, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_push_varaddr, *token_itr, 0);
         *token_itr += 1;
     } else {
         sxcscript_parse_postfix(token_itr, node_itr, label, label_size, -1, -1);
@@ -276,9 +279,9 @@ void sxcscript_analyze_push(struct sxcscript_node* node, struct sxcscript_token*
         if (node_itr->token == NULL) {
             continue;
         }
-        if (node_itr->kind == sxcscript_kind_const_push) {
+        if (node_itr->kind == sxcscript_kind_push_const) {
             node_itr->val = sxcscript_token_to_int32(node_itr->token);
-        } else if (node_itr->kind == sxcscript_kind_local_push) {
+        } else if (node_itr->kind == sxcscript_kind_push_varaddr) {
             for (int i = 0;; i++) {
                 if (i == local_size) {
                     local_token[local_size] = node_itr->token;
@@ -314,7 +317,7 @@ void sxcscript_analyze_toinst(union sxcscript_mem* mem, struct sxcscript_node* n
     for (struct sxcscript_node* node_itr = node; node_itr->kind != sxcscript_kind_null; node_itr++) {
         if (node_itr->kind == sxcscript_kind_label) {
             label[node_itr->val].inst_i = inst_itr - mem;
-        } else if (node_itr->kind == sxcscript_kind_const_push || node_itr->kind == sxcscript_kind_local_push) {
+        } else if (node_itr->kind == sxcscript_kind_push_const || node_itr->kind == sxcscript_kind_push_varaddr) {
             *(inst_itr++) = (union sxcscript_mem){.kind = node_itr->kind};
             *(inst_itr++) = (union sxcscript_mem){.val = node_itr->val};
         } else if (node_itr->kind == sxcscript_kind_jmp || node_itr->kind == sxcscript_kind_jze) {
@@ -342,7 +345,7 @@ void sxcscript_link(union sxcscript_mem* mem, struct sxcscript_label* label) {
         if (inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze || inst_itr->kind == sxcscript_kind_call) {
             inst_itr += 1;
             inst_itr->val = label[inst_itr->val].inst_i;
-        } else if (inst_itr->kind == sxcscript_kind_const_push) {
+        } else if (inst_itr->kind == sxcscript_kind_push_const) {
             inst_itr += 1;
         }
     }
@@ -389,13 +392,19 @@ void sxcscript_run(union sxcscript_mem* mem) {
                 break;
             case sxcscript_kind_nop:
                 break;
-            case sxcscript_kind_const_push:
+            case sxcscript_kind_push_const:
                 (mem[sxcscript_global_ip].val)++;
                 mem[(mem[sxcscript_global_sp].val)++].val = mem[mem[sxcscript_global_ip].val].val;
                 break;
-            case sxcscript_kind_local_push:
+            case sxcscript_kind_push_varaddr:
                 (mem[sxcscript_global_ip].val)++;
                 mem[(mem[sxcscript_global_sp].val)++].val = mem[sxcscript_global_bp].val + mem[mem[sxcscript_global_ip].val].val;
+                break;
+            case sxcscript_kind_test01:
+                break;
+            case sxcscript_kind_test02:
+                break;
+            case sxcscript_kind_test03:
                 break;
             case sxcscript_kind_global_get:
                 mem[mem[sxcscript_global_sp].val - 1].val = mem[mem[mem[sxcscript_global_sp].val - 1].val].val;
