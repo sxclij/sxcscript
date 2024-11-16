@@ -138,6 +138,10 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
     }
     *token_itr = (struct sxcscript_token){NULL, 0};
 }
+void sxcscript_parse_push(struct sxcscript_node** node_itr, enum sxcscript_kind kind, struct sxcscript_token* token, int val) {
+    **node_itr = (struct sxcscript_node){.kind = kind, .token = token, .val = val};
+    *node_itr += 1;
+}
 void sxcscript_parse_primary(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
 }
 void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
