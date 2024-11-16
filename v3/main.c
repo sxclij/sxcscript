@@ -123,7 +123,7 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
             if (token_itr->size != 0) {
                 token_itr++;
             }
-        } else if (*src_itr == '(' || *src_itr == ')' || *src_itr == ',' || *src_itr == '.') {
+        } else if (*src_itr == '(' || *src_itr == ')' || *src_itr == ',' || *src_itr == '.' || *src_itr == '*' || *src_itr == '&') {
             if (token_itr->size != 0) {
                 token_itr++;
             }
