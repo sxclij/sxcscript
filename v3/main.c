@@ -160,7 +160,7 @@ void sxcscript_parse_or(struct sxcscript_token** token_itr, struct sxcscript_nod
     while (sxcscript_token_eq_str(*token_itr, "||")) {
         *token_itr += 1;
         sxcscript_parse_and(token_itr, node_itr, label, label_size, -1, -1);
-        sxcscript_parse_push(node_itr, sxcscript_parse_assign, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_or, NULL, 0);
     }
 }
 void sxcscript_parse_assign(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
