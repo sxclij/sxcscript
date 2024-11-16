@@ -139,39 +139,35 @@ void sxcscript_tokenize(const char* src, struct sxcscript_token* token) {
     *token_itr = (struct sxcscript_token){NULL, 0};
 }
 void sxcscript_parse_primary(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_unary(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_mul(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_add(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_rel(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_and(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_or(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
 }
 void sxcscript_parse_assign(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-
+    sxcscript_parse_or(token_itr, node_itr, label, label_size, -1, -1);
+    while (sxcscript_token_eq_str(*token_itr, "||")) {
+        *token_itr += 1;
+        sxcscript_parse_or(token_itr, node_itr, label, label_size, -1, -1);
+    }
 }
 void sxcscript_parse_expression(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-        sxcscript_parse_assign(&token_itr, &node_itr, label, label_size, -1, -1);
+    sxcscript_parse_assign(token_itr, node_itr, label, label_size, -1, -1);
 }
 void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node, struct sxcscript_label* label, int* label_size) {
     struct sxcscript_token* token_itr = token;
     struct sxcscript_node* node_itr = node;
-    while(token_itr->data != NULL) {
+    while (token_itr->data != NULL) {
         sxcscript_parse_expression(&token_itr, &node_itr, label, label_size, -1, -1);
     }
 }
