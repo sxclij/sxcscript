@@ -170,7 +170,14 @@ void sxcscript_parse_primary(struct sxcscript_token** token_itr, struct sxcscrip
     }
 }
 void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
-    sxcscript_parse_primary(token_itr, node_itr, label, label_size, -1, -1);
+    struct sxcscript_token* token_start = *token_itr;
+    if (sxcscript_token_eq_str(*token_itr + 1, "(")) {
+        token_itr++;
+        sxcscript_parse_expression(token_itr, node_itr, label, label_size, -1, -1);
+        sxcscript_parse_push(node_itr, sxcscript_kind_call, token_start, 0);
+    } else {
+        sxcscript_parse_primary(token_itr, node_itr, label, label_size, -1, -1);
+    }
 }
 void sxcscript_parse_unary(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
     if (sxcscript_token_eq_str(*token_itr, "&")) {
