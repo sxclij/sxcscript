@@ -17,33 +17,32 @@ enum bool {
 enum sxcscript_kind {
     sxcscript_kind_null,
     sxcscript_kind_nop,
-    sxcscript_kind_push,
-    sxcscript_kind_label,
-    sxcscript_kind_label_fnend,
+    sxcscript_kind_const_push,
+    sxcscript_kind_local_push,
+    sxcscript_kind_global_get,
+    sxcscript_kind_global_set,
     sxcscript_kind_call,
     sxcscript_kind_return,
     sxcscript_kind_jmp,
     sxcscript_kind_jze,
-    sxcscript_kind_const_get,
-    sxcscript_kind_local_get,
-    sxcscript_kind_local_set,
-    sxcscript_kind_global_get,
-    sxcscript_kind_global_set,
-    sxcscript_kind_addr,
+    sxcscript_kind_or,
+    sxcscript_kind_and,
+    sxcscript_kind_eq,
+    sxcscript_kind_ne,
+    sxcscript_kind_lt,
+    sxcscript_kind_gt,
     sxcscript_kind_add,
     sxcscript_kind_sub,
     sxcscript_kind_mul,
     sxcscript_kind_div,
     sxcscript_kind_mod,
-    sxcscript_kind_not,
-    sxcscript_kind_and,
-    sxcscript_kind_eq,
-    sxcscript_kind_lt,
     sxcscript_kind_open,
     sxcscript_kind_close,
     sxcscript_kind_read,
     sxcscript_kind_write,
     sxcscript_kind_usleep,
+    sxcscript_kind_label,
+    sxcscript_kind_label_fnend,
 };
 enum sxcscript_global {
     sxcscript_global_null = 0,
@@ -157,13 +156,19 @@ void sxcscript_parse_rel(struct sxcscript_token** token_itr, struct sxcscript_no
 void sxcscript_parse_and(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
 }
 void sxcscript_parse_or(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
+    sxcscript_parse_and(token_itr, node_itr, label, label_size, -1, -1);
+    while (sxcscript_token_eq_str(*token_itr, "||")) {
+        *token_itr += 1;
+        sxcscript_parse_and(token_itr, node_itr, label, label_size, -1, -1);
+        sxcscript_parse_push(node_itr, sxcscript_parse_assign, NULL, 0);
+    }
 }
 void sxcscript_parse_assign(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
     sxcscript_parse_or(token_itr, node_itr, label, label_size, -1, -1);
     while (sxcscript_token_eq_str(*token_itr, "=")) {
         *token_itr += 1;
         sxcscript_parse_or(token_itr, node_itr, label, label_size, -1, -1);
-        sxcscript_parse_push(node_itr, sxcscript_parse_assign, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_global_set, NULL, 0);
     }
 }
 void sxcscript_parse_expression(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
