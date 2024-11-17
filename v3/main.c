@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/04.txt"
+#define sxcscript_path "test/05.txt"
 #define sxcscript_mem_size (1 << 20)
 #define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
@@ -179,9 +179,9 @@ void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscrip
         *token_itr += 1;
         sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
         if (sxcscript_token_eq_str(token_start, "write")) {
-            sxcscript_parse_push(node_itr, sxcscript_kind_write, token_start, 0);
+            sxcscript_parse_push(node_itr, sxcscript_kind_write, NULL, 0);
         } else if (sxcscript_token_eq_str(token_start, "return")) {
-            sxcscript_parse_push(node_itr, sxcscript_kind_return, token_start, 0);
+            sxcscript_parse_push(node_itr, sxcscript_kind_return, NULL, 0);
         } else {
             sxcscript_parse_push(node_itr, sxcscript_kind_call, token_start, 0);
         }
@@ -194,6 +194,10 @@ void sxcscript_parse_unary(struct sxcscript_token** token_itr, struct sxcscript_
         *token_itr += 1;
         sxcscript_parse_push(node_itr, sxcscript_kind_push_varaddr, *token_itr, 0);
         *token_itr += 1;
+    } else if (sxcscript_token_eq_str(*token_itr, "*")) {
+        *token_itr += 1;
+        sxcscript_parse_postfix(token_itr, node_itr, label, label_size, label_break, label_continue);
+        sxcscript_parse_push(node_itr, sxcscript_kind_global_get, NULL, 0);
     } else {
         sxcscript_parse_postfix(token_itr, node_itr, label, label_size, label_break, label_continue);
     }
