@@ -235,7 +235,7 @@ void sxcscript_parse_rel(struct sxcscript_token** token_itr, struct sxcscript_no
             *token_itr += 1;
             sxcscript_parse_add(token_itr, node_itr, label, label_size, label_break, label_continue);
             sxcscript_parse_push(node_itr, sxcscript_kind_lt, NULL, 0);
-        } else if (sxcscript_token_eq_str(*token_itr, "<")) {
+        } else if (sxcscript_token_eq_str(*token_itr, ">")) {
             *token_itr += 1;
             sxcscript_parse_add(token_itr, node_itr, label, label_size, label_break, label_continue);
             sxcscript_parse_push(node_itr, sxcscript_kind_gt, NULL, 0);
