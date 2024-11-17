@@ -1,8 +1,8 @@
 &a = 0
 loop(
-    &a = a + 1
     if(a == 100) (
         break
     )
+    &a = a + 1
 )
 &b = a + 200

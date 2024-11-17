@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/01.txt"
+#define sxcscript_path "test/02.txt"
 #define sxcscript_mem_size (1 << 20)
 #define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
@@ -270,21 +270,35 @@ void sxcscript_parse_assign(struct sxcscript_token** token_itr, struct sxcscript
 }
 void sxcscript_parse_expression(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
     if (sxcscript_token_eq_str(*token_itr, "if")) {
-        int if_label = (*label_size)++;
-        int else_label = (*label_size)++;
+        int label_if = (*label_size)++;
+        int label_else = (*label_size)++;
         *token_itr += 1;
         sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
-        sxcscript_parse_push(node_itr, sxcscript_kind_jze, NULL, if_label);
+        sxcscript_parse_push(node_itr, sxcscript_kind_jze, NULL, label_if);
         sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
         if (sxcscript_token_eq_str(*token_itr, "else")) {
             *token_itr += 1;
-            sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, else_label);
-            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, if_label);
+            sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, label_else);
+            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, label_if);
             sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
-            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, else_label);
+            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, label_else);
         } else {
-            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, if_label);
+            sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, label_if);
         }
+    } else if (sxcscript_token_eq_str(*token_itr, "loop")) {
+        int label_start = (*label_size)++;
+        int label_end = (*label_size)++;
+        *token_itr += 1;
+        sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, label_start);
+        sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_end, label_start);
+        sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, label_start);
+        sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, label_end);
+    } else if (sxcscript_token_eq_str(*token_itr, "break")) {
+        *token_itr += 1;
+        sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, label_break);
+    } else if (sxcscript_token_eq_str(*token_itr, "continue")) {
+        *token_itr += 1;
+        sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, label_continue);
     } else {
         sxcscript_parse_assign(token_itr, node_itr, label, label_size, label_break, label_continue);
     }
