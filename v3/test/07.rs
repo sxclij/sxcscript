@@ -39,6 +39,12 @@ fn allocate(dst, size) (
     x = *x + size + 2
     dst = x
 )
+
+fn swap(a, b) (
+    &t = *a
+    a = *b
+    b = t
+)
 fn print_endl() (
     putc(10)
 )
