@@ -1,0 +1,14 @@
+main()
+eternal_sleep()
+
+fn add(a, b) (
+    a + b
+)
+
+fn main() (
+    &a = add(100, 200)
+)
+
+fn eternal_sleep() (
+    loop()
+)

@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/02.txt"
+#define sxcscript_path "test/03.txt"
 #define sxcscript_mem_size (1 << 20)
 #define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
@@ -315,6 +315,36 @@ void sxcscript_parse_expression(struct sxcscript_token** token_itr, struct sxcsc
     } else if (sxcscript_token_eq_str(*token_itr, "continue")) {
         *token_itr += 1;
         sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, label_continue);
+    } else if (sxcscript_token_eq_str(*token_itr, "fn")) {
+        int label_fn = (*label_size)++;
+        int arg_size = 0;
+        *token_itr += 1;
+        label[label_fn].token = *token_itr;
+        *token_itr += 2;
+        while (!sxcscript_token_eq_str(*token_itr, ")")) {
+            sxcscript_parse_push(node_itr, sxcscript_kind_push_varaddr, *token_itr, 0);
+            *token_itr += 1;
+            arg_size++;
+            if (sxcscript_token_eq_str(*token_itr, ",")) {
+                *token_itr += 1;
+            }
+        }
+        struct sxcscript_node* arg_itr = *node_itr - 1;
+        for (int i = 0; i < arg_size; i++) {
+            arg_itr->val = -4 - i;
+            arg_itr--;
+        }
+        *token_itr += 1;
+        sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, label_fn);
+        sxcscript_parse_push(node_itr, sxcscript_kind_push_varaddr, NULL, -2);
+        sxcscript_parse_push(node_itr, sxcscript_kind_push_varaddr, NULL, -2);
+        sxcscript_parse_push(node_itr, sxcscript_kind_global_get, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_push_const, NULL, arg_size);
+        sxcscript_parse_push(node_itr, sxcscript_kind_sub, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_global_set, NULL, 0);
+        sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
+        sxcscript_parse_push(node_itr, sxcscript_kind_return, NULL, 0);
+        sxcscript_parse_push(node_itr, sxcscript_kind_label_fnend, NULL, 0);
     } else {
         sxcscript_parse_assign(token_itr, node_itr, label, label_size, label_break, label_continue);
     }
