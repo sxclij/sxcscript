@@ -1,0 +1,62 @@
+main()
+eternal_sleep()
+
+fn eternal_sleep() (
+    loop()
+)
+fn putc(ch) (
+    result = ext(ch, 6)
+)
+fn allocate(dst, size) (
+    &x = *3 - 2
+    x = *x + size + 2
+    dst = x
+)
+fn print_endl() (
+    putc(10)
+)
+fn print_int(x) (
+    &m = 1000000000
+    if (x < 0) (
+        putc(45)
+        &x = x * -1
+    ) else if (x == 0) (
+        putc(48)
+        return(0)
+    )
+    loop (
+        if (x / m > 0) (
+            break
+        )
+        &m = m / 10
+    )
+    loop (
+        if (m == 0) (
+            return(0)
+        )
+        putc(x / m % 10 + 48)
+        &m = m / 10
+    )
+)
+fn main() (
+    &a_size = 10
+    allocate(&a, a_size)
+    &i = 0
+    loop (
+        if(i == a_size) (
+            break
+        )
+        (a + i) = i * 10
+        &i = i + 1
+    )
+    &i = 0
+    loop (
+        if(i == a_size) (
+            break
+        )
+        print_int(*(a + i))
+        print_endl()
+        usleep(1000000)
+        &i = i + 1
+    )
+)

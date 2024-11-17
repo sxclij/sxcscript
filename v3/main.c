@@ -3,11 +3,11 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/05.txt"
+#define sxcscript_path "test/06.txt"
 #define sxcscript_mem_size (1 << 20)
 #define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
-#define sxcscript_global_size (1 << 8)
+#define sxcscript_global_size (1 << 12)
 #define sxcscript_stack_size (1 << 8)
 
 enum bool {
@@ -39,11 +39,8 @@ enum sxcscript_kind {
     sxcscript_kind_mul,
     sxcscript_kind_div,
     sxcscript_kind_mod,
-    sxcscript_kind_open,
-    sxcscript_kind_close,
-    sxcscript_kind_read,
-    sxcscript_kind_write,
     sxcscript_kind_usleep,
+    sxcscript_kind_ext,
     sxcscript_kind_label,
     sxcscript_kind_label_fnend,
 };
@@ -180,10 +177,10 @@ void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscrip
         sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
         if (sxcscript_token_eq_str(token_start, "return")) {
             sxcscript_parse_push(node_itr, sxcscript_kind_return, NULL, 0);
-        } else if (sxcscript_token_eq_str(token_start, "write")) {
-            sxcscript_parse_push(node_itr, sxcscript_kind_write, NULL, 0);
         } else if (sxcscript_token_eq_str(token_start, "usleep")) {
             sxcscript_parse_push(node_itr, sxcscript_kind_usleep, NULL, 0);
+        } else if (sxcscript_token_eq_str(token_start, "ext")) {
+            sxcscript_parse_push(node_itr, sxcscript_kind_ext, NULL, 0);
         } else {
             sxcscript_parse_push(node_itr, sxcscript_kind_call, token_start, 0);
         }
@@ -482,11 +479,23 @@ void sxcscript_out(union sxcscript_mem* mem, char* buf) {
     write(fd, buf, buf_size);
     close(fd);
 }
-void sxcscript_run(union sxcscript_mem* mem) {
-    int result;
+void sxcscript_run_ext(union sxcscript_mem* mem) {
+    int kind = mem[mem[sxcscript_global_sp].val - 1].val;
     int a1;
     int a2;
     int a3;
+    mem[sxcscript_global_sp].val -= 1;
+    switch (kind) {
+        case 6:
+            a1 = mem[mem[sxcscript_global_sp].val - 1].val;
+            mem[mem[sxcscript_global_sp].val - 1].val = write(1, &mem[a1], 1);
+            break;
+        default:
+            break;
+    }
+}
+void sxcscript_run(union sxcscript_mem* mem) {
+    int result;
     while (mem[mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
         switch (mem[mem[sxcscript_global_ip].val].kind) {
             case sxcscript_kind_null:
@@ -585,33 +594,11 @@ void sxcscript_run(union sxcscript_mem* mem) {
                 mem[mem[sxcscript_global_sp].val - 2].val %= mem[mem[sxcscript_global_sp].val - 1].val;
                 mem[sxcscript_global_sp].val -= 1;
                 break;
-            case sxcscript_kind_open:
-                a1 = mem[mem[sxcscript_global_sp].val - 2].val;
-                a2 = mem[mem[sxcscript_global_sp].val - 1].val;
-                mem[mem[sxcscript_global_sp].val - 2].val = open((const char*)&mem[a1], a2);
-                mem[sxcscript_global_sp].val -= 1;
-                break;
-            case sxcscript_kind_close:
-                a1 = mem[mem[sxcscript_global_sp].val - 1].val;
-                mem[mem[sxcscript_global_sp].val - 1].val = close(a1);
-                break;
-            case sxcscript_kind_read:
-                a1 = mem[mem[sxcscript_global_sp].val - 3].val;
-                a2 = mem[mem[sxcscript_global_sp].val - 2].val;
-                a3 = mem[mem[sxcscript_global_sp].val - 1].val;
-                mem[mem[sxcscript_global_sp].val - 3].val = read(a1, &mem[a2], a3);
-                mem[sxcscript_global_sp].val -= 2;
-                break;
-            case sxcscript_kind_write:
-                a1 = mem[mem[sxcscript_global_sp].val - 3].val;
-                a2 = mem[mem[sxcscript_global_sp].val - 2].val;
-                a3 = mem[mem[sxcscript_global_sp].val - 1].val;
-                mem[mem[sxcscript_global_sp].val - 3].val = write(a1, &mem[a2], a3);
-                mem[sxcscript_global_sp].val -= 2;
-                break;
             case sxcscript_kind_usleep:
-                a1 = mem[mem[sxcscript_global_sp].val - 1].val;
-                mem[mem[sxcscript_global_sp].val - 1].val = usleep(a1);
+                mem[mem[sxcscript_global_sp].val - 1].val = usleep(mem[mem[sxcscript_global_sp].val - 1].val);
+                break;
+            case sxcscript_kind_ext:
+                sxcscript_run_ext(mem);
                 break;
             default:
                 break;
