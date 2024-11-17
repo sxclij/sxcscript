@@ -70,12 +70,12 @@ fn main() (
         &mouse_down = *17
         &mouse_x = *18
         &mouse_y = *19
+        &status = goto(mouse_x, mouse_y)
         if (mouse_down) (
             &status = pen_down()
         ) else (
             &status = pen_up()
         )
-        &status = goto(mouse_x, mouse_y)
         &status = usleep(0)
     )
 )
