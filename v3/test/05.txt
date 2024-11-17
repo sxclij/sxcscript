@@ -56,6 +56,7 @@ fn main() (
         )
         print_int(*(a + i))
         print_endl()
+        usleep(1000000)
         &i = i + 1
     )
 )
