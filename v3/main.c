@@ -244,11 +244,27 @@ void sxcscript_parse_rel(struct sxcscript_token** token_itr, struct sxcscript_no
         }
     }
 }
-void sxcscript_parse_and(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
+void sxcscript_parse_eq(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
     sxcscript_parse_rel(token_itr, node_itr, label, label_size, label_break, label_continue);
+    while (1) {
+        if (sxcscript_token_eq_str(*token_itr, "==")) {
+            *token_itr += 1;
+            sxcscript_parse_rel(token_itr, node_itr, label, label_size, label_break, label_continue);
+            sxcscript_parse_push(node_itr, sxcscript_kind_eq, NULL, 0);
+        } else if (sxcscript_token_eq_str(*token_itr, "!=")) {
+            *token_itr += 1;
+            sxcscript_parse_rel(token_itr, node_itr, label, label_size, label_break, label_continue);
+            sxcscript_parse_push(node_itr, sxcscript_kind_ne, NULL, 0);
+        } else {
+            break;
+        }
+    }
+}
+void sxcscript_parse_and(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
+    sxcscript_parse_eq(token_itr, node_itr, label, label_size, label_break, label_continue);
     while (sxcscript_token_eq_str(*token_itr, "&&")) {
         *token_itr += 1;
-        sxcscript_parse_rel(token_itr, node_itr, label, label_size, label_break, label_continue);
+        sxcscript_parse_eq(token_itr, node_itr, label, label_size, label_break, label_continue);
         sxcscript_parse_push(node_itr, sxcscript_kind_and, NULL, 0);
     }
 }
