@@ -1,13 +1,17 @@
 main()
 eternal_sleep()
 
-fn eternal_sleep() (
-    loop(
-        &status = usleep(0)
-    )
+fn breakpoint() (
+    ext(5)
 )
 fn putc(ch) (
     result = ext(ch, 6)
+)
+fn erase_all() (
+    ext(9)
+)
+fn stamp() (
+    ext(10)
 )
 fn pen_down() (
     ext(11)
@@ -23,6 +27,12 @@ fn pen_size_set(x) (
 )
 fn goto(x, y) (
     result = ext(x, y, 15)
+)
+
+fn eternal_sleep() (
+    loop(
+        &status = usleep(0)
+    )
 )
 fn allocate(dst, size) (
     &x = *3 - 2
