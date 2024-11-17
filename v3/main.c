@@ -180,6 +180,8 @@ void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscrip
         sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
         if (sxcscript_token_eq_str(token_start, "write")) {
             sxcscript_parse_push(node_itr, sxcscript_kind_write, token_start, 0);
+        } else if (sxcscript_token_eq_str(token_start, "return")) {
+            sxcscript_parse_push(node_itr, sxcscript_kind_return, token_start, 0);
         } else {
             sxcscript_parse_push(node_itr, sxcscript_kind_call, token_start, 0);
         }

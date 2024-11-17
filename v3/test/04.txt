@@ -7,6 +7,32 @@ fn eternal_sleep() (
 fn putc(ch) (
     write(1, &ch, 1)
 )
+fn print_endl() (
+    putc(10)
+)
+fn print_int(x) (
+    &m = 1000000000
+    if (x < 0) (
+        putc(45)
+        &x = x * -1
+    ) else if (x == 0) (
+        putc(48)
+        return(0)
+    )
+    loop (
+        if (x / m > 0) (
+            break
+        )
+        &m = m / 10
+    )
+    loop (
+        if (m == 0) (
+            return(0)
+        )
+        putc(x / m % 10 + 48)
+        &m = m / 10
+    )
+)
 fn main() (
-    putc(48)
+    print_int(-114514)
 )
