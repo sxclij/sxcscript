@@ -1,0 +1,15 @@
+
+
+
+
+breakpoint()
+log(ch)
+warn(ch)
+error(ch)
+erase_all()
+stamp()
+pen_down()
+pen_up()
+pen_color_set(x)
+pen_size_set(x)
+goto(x, y)
