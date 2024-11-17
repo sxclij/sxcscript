@@ -488,7 +488,7 @@ void sxcscript_run_ext(union sxcscript_mem* mem) {
     switch (kind) {
         case 6:
             a1 = mem[mem[sxcscript_global_sp].val - 1].val;
-            mem[mem[sxcscript_global_sp].val - 1].val = write(1, &mem[a1], 1);
+            mem[mem[sxcscript_global_sp].val - 1].val = write(1, &a1, 1);
             break;
         default:
             break;

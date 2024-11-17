@@ -2,7 +2,9 @@ main()
 eternal_sleep()
 
 fn eternal_sleep() (
-    loop()
+    loop(
+        &status = usleep(0)
+    )
 )
 fn putc(ch) (
     result = ext(ch, 6)
@@ -54,9 +56,9 @@ fn main() (
         if(i == a_size) (
             break
         )
-        print_int(*(a + i))
-        print_endl()
-        usleep(1000000)
+        &status = print_int(*(a + i))
+        &status = print_endl()
+        &status = usleep(0)
         &i = i + 1
     )
 )
