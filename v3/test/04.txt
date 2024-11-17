@@ -1,0 +1,12 @@
+main()
+eternal_sleep()
+
+fn eternal_sleep() (
+    loop()
+)
+fn putc(ch) (
+    write(1, &ch, 1)
+)
+fn main() (
+    putc(48)
+)
