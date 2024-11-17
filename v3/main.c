@@ -157,10 +157,14 @@ void sxcscript_parse_primary(struct sxcscript_token** token_itr, struct sxcscrip
     char ch = (*token_itr)->data[0];
     if (sxcscript_token_eq_str(*token_itr, "(")) {
         *token_itr += 1;
-        sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
+        while (!sxcscript_token_eq_str(*token_itr, ")")) {
+            sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
+            if (sxcscript_token_eq_str(*token_itr, ",")) {
+                *token_itr += 1;
+            }
+        }
         *token_itr += 1;
-    }
-    if (sxcscript_isdigit((*token_itr)->data)) {
+    } else if (sxcscript_isdigit((*token_itr)->data)) {
         sxcscript_parse_push(node_itr, sxcscript_kind_push_const, *token_itr, 0);
         *token_itr += 1;
     } else {
@@ -272,7 +276,7 @@ void sxcscript_parse_expression(struct sxcscript_token** token_itr, struct sxcsc
         sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
         sxcscript_parse_push(node_itr, sxcscript_kind_jze, NULL, if_label);
         sxcscript_parse_expression(token_itr, node_itr, label, label_size, label_break, label_continue);
-        if (sxcscript_token_eq_str(*token_itr, "if")) {
+        if (sxcscript_token_eq_str(*token_itr, "else")) {
             *token_itr += 1;
             sxcscript_parse_push(node_itr, sxcscript_kind_jmp, NULL, else_label);
             sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, if_label);
@@ -281,8 +285,9 @@ void sxcscript_parse_expression(struct sxcscript_token** token_itr, struct sxcsc
         } else {
             sxcscript_parse_push(node_itr, sxcscript_kind_label, NULL, if_label);
         }
+    } else {
+        sxcscript_parse_assign(token_itr, node_itr, label, label_size, label_break, label_continue);
     }
-    sxcscript_parse_assign(token_itr, node_itr, label, label_size, label_break, label_continue);
 }
 void sxcscript_parse(struct sxcscript_token* token, struct sxcscript_node* node, struct sxcscript_label* label, int* label_size) {
     struct sxcscript_token* token_itr = token;
@@ -369,7 +374,7 @@ void sxcscript_link(union sxcscript_mem* mem, struct sxcscript_label* label) {
         if (inst_itr->kind == sxcscript_kind_jmp || inst_itr->kind == sxcscript_kind_jze || inst_itr->kind == sxcscript_kind_call) {
             inst_itr += 1;
             inst_itr->val = label[inst_itr->val].inst_i;
-        } else if (inst_itr->kind == sxcscript_kind_push_const) {
+        } else if (inst_itr->kind == sxcscript_kind_push_const || inst_itr->kind == sxcscript_kind_push_varaddr) {
             inst_itr += 1;
         }
     }
