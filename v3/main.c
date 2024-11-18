@@ -7,8 +7,8 @@
 #define sxcscript_mem_size (1 << 20)
 #define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
-#define sxcscript_global_size (1 << 12)
-#define sxcscript_stack_size (1 << 8)
+#define sxcscript_global_size (1 << 8)
+#define sxcscript_stack_size (1 << 10)
 
 enum bool {
     false = 0,
