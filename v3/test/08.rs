@@ -109,7 +109,7 @@ fn main() (
 
 
     loop (
-        &mouse_down = *17
+        &mouse_isdown = *17
         &mouse_x = *18
         &mouse_y = *19
 
@@ -123,7 +123,7 @@ fn main() (
             &y = vec_get(button_y, i)
             &dx = vec_get(button_dx, i)
             &dy = vec_get(button_dy, i)
-            if (mouse_down && mouse_x > x - dx && mouse_x < x + dx && mouse_y > y - dy && mouse_y < y + dy) (
+            if (mouse_isdown && mouse_x > x - dx && mouse_x < x + dx && mouse_y > y - dy && mouse_y < y + dy) (
                 &dx = dx + 4
                 &dy = dy + 4
             )
