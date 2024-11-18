@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/07.rs"
+#define sxcscript_path "test/08.rs"
 #define sxcscript_mem_size (1 << 20)
 #define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
@@ -271,8 +271,8 @@ void sxcscript_parse_eq(struct sxcscript_token** token_itr, struct sxcscript_nod
 }
 void sxcscript_parse_and(struct sxcscript_token** token_itr, struct sxcscript_node** node_itr, struct sxcscript_label* label, int* label_size, int label_break, int label_continue) {
     sxcscript_parse_eq(token_itr, node_itr, label, label_size, label_break, label_continue);
-    while (sxcscript_token_eq_str(*token_itr, "&&")) {
-        *token_itr += 1;
+    while (sxcscript_token_eq_str(*token_itr, "&") && sxcscript_token_eq_str(*token_itr + 1, "&")) {
+        *token_itr += 2;
         sxcscript_parse_eq(token_itr, node_itr, label, label_size, label_break, label_continue);
         sxcscript_parse_push(node_itr, sxcscript_kind_and, NULL, 0);
     }
@@ -626,7 +626,7 @@ void sxcscript_init(union sxcscript_mem* mem) {
 void sxcscript() {
     static union sxcscript_mem mem[sxcscript_mem_size];
     sxcscript_init(mem);
-    sxcscript_run(mem);
+    // sxcscript_run(mem);
 }
 void init() {
     struct rlimit rlim = (struct rlimit){.rlim_cur = stacksize, .rlim_max = stacksize};
