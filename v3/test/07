@@ -73,9 +73,10 @@ fn print_int(x) (
 )
 fn main() (
     loop (
-        &mouse_down = *17
-        &mouse_x = *18
-        &mouse_y = *19
+        &utc = *33
+        &mouse_down = *34
+        &mouse_x = *35
+        &mouse_y = *36
         &status = goto(mouse_x, mouse_y)
         if (mouse_down) (
             &status = pen_down()
