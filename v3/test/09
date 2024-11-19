@@ -101,13 +101,14 @@ fn obj_spawn() (
     &obj_free = *131
     &result = vec_pop(obj_free)
     &status = vec_push(obj_clone, result)
-    result + 4 = 1
-    result + 5 = 1
     return (result)
 )
 fn obj_pos_set(obj, x, y) (
     obj + 11 = x
     obj + 12 = y
+)
+fn obj_size_set(obj, x) (
+    obj + 14 = x
 )
 
 fn main() (
@@ -131,7 +132,9 @@ fn main() (
         &i = i + 1
     )
     
-    &testobj01 = obj_spawn()
+    &ui_start = obj_spawn()
+    &status = obj_pos_set(ui_start, 0, 50)
+    &status = obj_size_set(ui_start, 1000)
 
     loop (
         &utc_now = *33
