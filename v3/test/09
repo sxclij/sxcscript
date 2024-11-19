@@ -96,13 +96,6 @@ fn vec_pop(v) (
     return (result)
 )
 
-fn obj_spawn() (
-    &obj_clone = *130
-    &obj_free = *131
-    &result = vec_pop(obj_free)
-    &status = vec_push(obj_clone, result)
-    return (result)
-)
 fn obj_pos_set(obj, x, y) (
     obj + 11 = x
     obj + 12 = y
@@ -110,19 +103,25 @@ fn obj_pos_set(obj, x, y) (
 fn obj_size_set(obj, x) (
     obj + 14 = x
 )
-
-fn main() (
-
-    _allocate(&obj_data, 128 * 300)
-    _allocate(&obj_clone, 300 + 2)
-    _allocate(&obj_free, 300 + 2)
+fn obj_dir_set(obj, x) (
+    obj + 15 = x
+)
+fn obj_costume_set(obj, x) (
+    obj + 16 = x
+)
+fn obj_spawn() (
+    &obj_clone = *130
+    &obj_free = *131
+    &result = vec_pop(obj_free)
+    &status = vec_push(obj_clone, result)
+    return (result)
+)
+fn obj_init(obj_data, obj_clone, obj_free) (
     &status = vec_init(obj_clone)
     &status = vec_init(obj_free)
-    
     129 = obj_data
     130 = obj_clone
     131 = obj_free
-
     &i = 0
     loop (
         if(i == 300) (
@@ -131,10 +130,20 @@ fn main() (
         &status = vec_push(obj_free, obj_data + i * 128)
         &i = i + 1
     )
+)
+
+fn main() (
+
+    _allocate(&obj_data, 128 * 300)
+    _allocate(&obj_clone, 300 + 2)
+    _allocate(&obj_free, 300 + 2)
+    
+    obj_init(obj_data, obj_clone, obj_free)
     
     &ui_start = obj_spawn()
-    &status = obj_pos_set(ui_start, 0, 50)
-    &status = obj_size_set(ui_start, 1000)
+    &status = obj_pos_set(ui_start, 0, 0)
+    &status = obj_size_set(ui_start, 100)
+    &status = obj_costume_set(ui_start, 2)
 
     loop (
         &utc_now = *33
