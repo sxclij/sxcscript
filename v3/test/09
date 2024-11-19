@@ -176,12 +176,6 @@ fn main() (
             &y = obj_pos_y_get(obj)
             &dx = vec_get(obj_collision, collision_i + 1) / 2
             &dy = vec_get(obj_collision, collision_i + 2) / 2
-            print_int(obj)
-            print_endl()
-            print_int(dx)
-            print_endl()
-            print_int(vec_get(obj_collision, collision_i + 2) / 2)
-            print_endl()
             if (mouse_isdown && mouse_x > x - dx && mouse_x < x + dx && mouse_y > y - dy && mouse_y < y + dy) (
                 &status = obj_size_set(obj, 110)
             ) else (
