@@ -39,7 +39,6 @@ fn _allocate(dst, size) (
     x = *x + size + 2
     dst = x
 )
-
 fn swap(a, b) (
     &t = *a
     a = *b
@@ -95,7 +94,12 @@ fn vec_pop(v) (
     v = *v - 1
     return (result)
 )
-
+fn obj_pos_y_get(obj) (
+    return (*(obj + 11))
+)
+fn obj_pos_x_get(obj) (
+    return (*(obj + 12))
+)
 fn obj_pos_set(obj, x, y) (
     obj + 11 = x
     obj + 12 = y
@@ -109,6 +113,13 @@ fn obj_dir_set(obj, x) (
 fn obj_costume_set(obj, x) (
     obj + 16 = x
 )
+fn obj_collision_set(obj, size_x, size_y) (
+    &obj_collision = *132
+    &status = vec_push(obj_collision, obj)
+    &status = vec_push(obj_collision, size_x)
+    &status = vec_push(obj_collision, size_y)
+    &status = vec_push(obj_collision, 0)
+)
 fn obj_spawn() (
     &obj_clone = *130
     &obj_free = *131
@@ -116,12 +127,14 @@ fn obj_spawn() (
     &status = vec_push(obj_clone, result)
     return (result)
 )
-fn obj_init(obj_data, obj_clone, obj_free) (
+fn obj_init(obj_data, obj_clone, obj_free, obj_collision) (
     &status = vec_init(obj_clone)
     &status = vec_init(obj_free)
+    &status = vec_init(obj_collision)
     129 = obj_data
     130 = obj_clone
     131 = obj_free
+    132 = obj_collision
     &i = 0
     loop (
         if(i == 300) (
@@ -137,10 +150,12 @@ fn main() (
     _allocate(&obj_data, 128 * 300)
     _allocate(&obj_clone, 300 + 2)
     _allocate(&obj_free, 300 + 2)
+    _allocate(&obj_collision, 10 * 50 + 2)
     
-    obj_init(obj_data, obj_clone, obj_free)
-    
+    obj_init(obj_data, obj_clone, obj_free, obj_collision)
+
     &ui_start = obj_spawn()
+    &status = obj_collision_set(ui_start, 160, 38)
     &status = obj_pos_set(ui_start, 0, 0)
     &status = obj_size_set(ui_start, 100)
     &status = obj_costume_set(ui_start, 2)
@@ -150,6 +165,31 @@ fn main() (
         &mouse_isdown = *34
         &mouse_x = *35
         &mouse_y = *36
+
+        &collision_i = 0
+        loop (
+            if (collision_i == vec_size(obj_collision)) (
+                break
+            )
+            &obj = vec_get(obj_collision, collision_i + 0)
+            &x = obj_pos_x_get(obj)
+            &y = obj_pos_y_get(obj)
+            &dx = vec_get(obj_collision, collision_i + 1) / 2
+            &dy = vec_get(obj_collision, collision_i + 2) / 2
+            print_int(obj)
+            print_endl()
+            print_int(dx)
+            print_endl()
+            print_int(vec_get(obj_collision, collision_i + 2) / 2)
+            print_endl()
+            if (mouse_isdown && mouse_x > x - dx && mouse_x < x + dx && mouse_y > y - dy && mouse_y < y + dy) (
+                &status = obj_size_set(obj, 110)
+            ) else (
+                &status = obj_size_set(obj, 100)
+            )
+            &collision_i = collision_i + 4
+        )
+
 
         &status = erase_all()
         
