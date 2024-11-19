@@ -94,23 +94,23 @@ fn main() (
     
     _allocate(&button_x, button_capacity)
     _allocate(&button_y, button_capacity)
-    _allocate(&button_dx, button_capacity)
-    _allocate(&button_dy, button_capacity)
+    _allocate(&button_xsize, button_capacity)
+    _allocate(&button_ysize, button_capacity)
 
     &status = vec_init(button_x)
     &status = vec_init(button_y)
-    &status = vec_init(button_dx)
-    &status = vec_init(button_dy)
+    &status = vec_init(button_xsize)
+    &status = vec_init(button_ysize)
 
     &status = vec_push(button_x, 150)
     &status = vec_push(button_y, 50)
-    &status = vec_push(button_dx, 50)
-    &status = vec_push(button_dy, 20)
+    &status = vec_push(button_xsize, 60)
+    &status = vec_push(button_ysize, 40)
 
     &status = vec_push(button_x, -90)
     &status = vec_push(button_y, -20)
-    &status = vec_push(button_dx, 60)
-    &status = vec_push(button_dy, 15)
+    &status = vec_push(button_xsize, 60)
+    &status = vec_push(button_ysize, 30)
 
     loop (
         &utc = *33
@@ -126,8 +126,8 @@ fn main() (
             )
             &x = vec_get(button_x, i)
             &y = vec_get(button_y, i)
-            &dx = vec_get(button_dx, i)
-            &dy = vec_get(button_dy, i)
+            &dx = vec_get(button_xsize, i) / 2
+            &dy = vec_get(button_ysize, i) / 2
             if (mouse_isdown && mouse_x > x - dx && mouse_x < x + dx && mouse_y > y - dy && mouse_y < y + dy) (
                 &dx = dx + 4
                 &dy = dy + 4
