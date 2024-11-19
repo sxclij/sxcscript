@@ -30,10 +30,10 @@ bp
 
 
 
-utc
-mouse_isdown
-mouse_x
-mouse_y
+double utc_now
+bool mouse_isdown
+int mouse_x
+int mouse_y
 
 
 
@@ -126,5 +126,12 @@ mouse_y
 
 
 
-obj_data
-obj_priority
+int* obj_data
+vec<int*> obj_clone
+vec<int*> obj_free
+
+
+
+
+
+int* obj_camera

@@ -1,0 +1,146 @@
+main()
+eternal_sleep()
+
+fn breakpoint() (
+    ext(5)
+)
+fn putc(ch) (
+    &result = ext(ch, 6)
+)
+fn erase_all() (
+    ext(9)
+)
+fn stamp() (
+    ext(10)
+)
+fn pen_down() (
+    ext(11)
+)
+fn pen_up() (
+    ext(12)
+)
+fn pen_color_set(x) (
+    &result = ext(x, 13)
+)
+fn pen_size_set(x) (
+    &result = ext(x, 14)
+)
+fn goto(x, y) (
+    &result = ext(x, y, 15)
+)
+
+fn eternal_sleep() (
+    loop (
+        &status = usleep(0)
+    )
+)
+fn _allocate(dst, size) (
+    &x = *3 - 2
+    x = *x + size + 2
+    dst = x
+)
+
+fn swap(a, b) (
+    &t = *a
+    a = *b
+    b = t
+)
+fn print_endl() (
+    putc(10)
+)
+fn print_int(x) (
+    &m = 1000000000
+    if (x < 0) (
+        putc(45)
+        &x = x * -1
+    ) else if (x == 0) (
+        putc(48)
+        return(0)
+    )
+    loop (
+        if (x / m > 0) (
+            break
+        )
+        &m = m / 10
+    )
+    loop (
+        if (m == 0) (
+            return(0)
+        )
+        putc(x / m % 10 + 48)
+        &m = m / 10
+    )
+)
+fn vec_init(v) (
+    v = 0
+)
+fn vec_size(v) (
+    return (*v)
+)
+fn vec_get(v, i) (
+    return (*(v + i + 1))
+)
+fn vec_provide(v, i) (
+    return (v + i + 1)
+)
+fn vec_set(v, i, x) (
+    v + i + 1 = x
+)
+fn vec_push(v, x) (
+    v = *v + 1
+    v + *v = x
+)
+fn vec_pop(v) (
+    &result = v + *v
+    v = *v - 1
+    return (result)
+)
+
+fn obj_spawn() (
+    &obj_clone = *130
+    &obj_free = *131
+    &result = vec_pop(obj_free)
+    &status = vec_push(obj_clone, result)
+    result + 4 = 1
+    result + 5 = 1
+    return (result)
+)
+fn obj_pos_set(obj, x, y) (
+    obj + 11 = x
+    obj + 12 = y
+)
+
+fn main() (
+
+    _allocate(&obj_data, 128 * 300)
+    _allocate(&obj_clone, 300 + 2)
+    _allocate(&obj_free, 300 + 2)
+    &status = vec_init(obj_clone)
+    &status = vec_init(obj_free)
+    
+    129 = obj_data
+    130 = obj_clone
+    131 = obj_free
+
+    &i = 0
+    loop (
+        if(i == 300) (
+            break
+        )
+        &status = vec_push(obj_free, obj_data + i * 128)
+        &i = i + 1
+    )
+    
+    &testobj01 = obj_spawn()
+
+    loop (
+        &utc_now = *33
+        &mouse_isdown = *34
+        &mouse_x = *35
+        &mouse_y = *36
+
+        &status = erase_all()
+        
+        &status = usleep(0)
+    )
+)
