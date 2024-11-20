@@ -129,7 +129,7 @@ int mouse_y
 int* obj_data
 vec<int*> obj_clone
 vec<int*> obj_free
-vec<int*> obj_collision
+
 
 
 

@@ -18,8 +18,12 @@ visibility
 
 
 
-
-
+collision_isactive
+collision_ishovered
+collision_isclicking
+collision_isclicked
+collision_dx
+collision_dy
 
 
 
