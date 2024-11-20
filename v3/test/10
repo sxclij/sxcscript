@@ -1,0 +1,197 @@
+main()
+eternal_sleep()
+
+fn eternal_sleep() (
+    loop (
+        &status = usleep(0)
+    )
+)
+fn _allocate(dst, size) (
+    &x = *3 - 2
+    x = *x + size + 2
+    dst = x
+)
+fn min(a, b) (
+    if (a < b) (
+        return (a)
+    ) else (
+        return (b)
+    )
+)
+fn max(a, b) (
+    if (a > b) (
+        return (a)
+    ) else (
+        return (b)
+    )
+)
+fn swap(a, b) (
+    &t = *a
+    a = *b
+    b = t
+)
+fn vec_init(v) (
+    v = 0
+)
+fn vec_size(v) (
+    return (*v)
+)
+fn vec_get(v, i) (
+    return (*(v + i + 1))
+)
+fn vec_provide(v, i) (
+    return (v + i + 1)
+)
+fn vec_set(v, i, x) (
+    v + i + 1 = x
+)
+fn vec_push(v, x) (
+    v = *v + 1
+    v + *v = x
+)
+fn vec_pop(v) (
+    &result = v + *v
+    v = *v - 1
+    return (result)
+)
+fn obj_get(obj, i) (
+    return (*(obj + i))
+)
+fn obj_pos_y_get(obj) (
+    return (*(obj + 11))
+)
+fn obj_pos_x_get(obj) (
+    return (*(obj + 12))
+)
+fn obj_collision_isactive_get(obj) (
+    return (*(obj + 21))
+)
+fn obj_collision_ishoverd_get(obj) (
+    return (*(obj + 22))
+)
+fn obj_collision_isclicking_get(obj) (
+    return (*(obj + 23))
+)
+fn obj_collision_isclicked_get(obj) (
+    return (*(obj + 24))
+)
+fn obj_pos_set(obj, x, y) (
+    obj + 11 = x
+    obj + 12 = y
+)
+fn obj_size_set(obj, x) (
+    obj + 14 = x
+)
+fn obj_dir_set(obj, x) (
+    obj + 15 = x
+)
+fn obj_costume_set(obj, x) (
+    obj + 16 = x
+)
+fn obj_collision_set(obj, size_x, size_y) (
+    obj + 21 = 1
+    obj + 22 = 0
+    obj + 23 = 0
+    obj + 24 = 0
+    obj + 25 = size_x
+    obj + 26 = size_y
+)
+fn obj_spawn() (
+    &obj_clone = *130
+    &obj_free = *131
+    &result = vec_pop(obj_free)
+    &status = vec_push(obj_clone, result)
+    return (result)
+)
+fn obj_init(obj_data, obj_clone, obj_free) (
+    &status = vec_init(obj_clone)
+    &status = vec_init(obj_free)
+    &status = vec_init(obj_collision)
+    129 = obj_data
+    130 = obj_clone
+    131 = obj_free
+    132 = obj_collision
+    &i = 0
+    loop (
+        if(i == obj_maxcount) (
+            break
+        )
+        &status = vec_push(obj_free, obj_data + i * obj_maxindex)
+        &i = i + 1
+    )
+)
+
+fn main() (
+
+    &obj_maxcount = 500
+    &obj_maxindex = 128
+    &obj_data_size = obj_maxcount * obj_maxindex
+
+    _allocate(&obj_data, obj_data_size)
+    _allocate(&obj_clone, obj_maxcount + 2)
+    _allocate(&obj_free, obj_maxcount + 2)
+    
+    obj_init(obj_data, obj_clone, obj_free)
+
+    &ui_start = obj_spawn()
+    &status = obj_collision_set(ui_start, 160, 38)
+    &status = obj_pos_set(ui_start, 0, 0)
+    &status = obj_size_set(ui_start, 100)
+    &status = obj_costume_set(ui_start, 2)
+
+    loop (
+        &utc_prev = utc_now
+        &utc_now = *33
+        &utc_delta = min(100, utc_now - utc_delta)
+        &mouse_isdown_prev = mouse_isdown
+        &mouse_isdown = *34
+        &mouse_x = *35
+        &mouse_y = *36
+
+        
+        &obj_i = 0
+        loop (
+            if (obj_i == obj_maxcount + 1) (
+                break
+            )
+            &status = print_int( obj_itr == ui_start)
+            &obj_itr = obj_data + obj_i * obj_maxindex
+
+            &obj_x = obj_pos_x_get(obj_itr)
+            &obj_y = obj_pos_y_get(obj_itr)
+            
+            if (obj_collision_isactive_get(obj_itr)) (
+                print_int(1)
+                &obj_collision_dx = obj_get(obj_itr, 25)
+                &obj_collision_dy = obj_get(obj_itr, 26)
+                obj_itr + 22 = mouse_x > obj_x - obj_collision_dx && mouse_x < obj_x + obj_collision_dx && mouse_isdown mouse_x > obj_x - obj_collision_dx && mouse_x < obj_x + obj_collision_dx
+                if (obj_get(obj_itr, 23)) (
+                    if (obj_get(obj_itr, 22)) (
+                        if (mouse_isdown == 0) (
+                            obj_itr + 23 = 0
+                            obj_itr + 24 = 1
+                        )
+                    ) else (
+                        obj_itr + 23 = 0
+                    )
+                ) else (
+                    obj_itr + 23 = obj_get(obj_itr, 22) && mouse_isdown_prev == 0 && mouse_isdown
+                )
+                if (obj_collision_isclicking_get(obj_itr)) (
+                    &status = obj_size_set(obj_itr, 110)
+                ) else if (obj_collision_ishoverd_get(obj_itr)) (
+                    &status = obj_size_set(obj_itr, 105)
+                ) else (
+                    &status = obj_size_set(obj_itr, 100)
+                )
+            )
+            
+            &obj_i = obj_i + 1
+        )
+
+
+        &status = erase_all()
+        
+        &status = usleep(0)
+    )
+)

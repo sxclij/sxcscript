@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #define stacksize (128 * 1014 * 1024)
-#define sxcscript_path "test/09"
+#define sxcscript_path "test/10"
 #define sxcscript_mem_size (1 << 20)
 #define sxcscript_compile_size (1 << 20)
 #define sxcscript_buf_size (1 << 10)
@@ -40,7 +40,6 @@ enum sxcscript_kind {
     sxcscript_kind_div,
     sxcscript_kind_mod,
     sxcscript_kind_usleep,
-    sxcscript_kind_ext,
     sxcscript_kind_label,
     sxcscript_kind_label_fnend,
 };
@@ -179,8 +178,6 @@ void sxcscript_parse_postfix(struct sxcscript_token** token_itr, struct sxcscrip
             sxcscript_parse_push(node_itr, sxcscript_kind_return, NULL, 0);
         } else if (sxcscript_token_eq_str(token_start, "usleep")) {
             sxcscript_parse_push(node_itr, sxcscript_kind_usleep, NULL, 0);
-        } else if (sxcscript_token_eq_str(token_start, "ext")) {
-            sxcscript_parse_push(node_itr, sxcscript_kind_ext, NULL, 0);
         } else {
             sxcscript_parse_push(node_itr, sxcscript_kind_call, token_start, 0);
         }
@@ -479,21 +476,6 @@ void sxcscript_out(union sxcscript_mem* mem, char* buf) {
     write(fd, buf, buf_size);
     close(fd);
 }
-void sxcscript_run_ext(union sxcscript_mem* mem) {
-    int kind = mem[mem[sxcscript_global_sp].val - 1].val;
-    int a1;
-    int a2;
-    int a3;
-    mem[sxcscript_global_sp].val -= 1;
-    switch (kind) {
-        case 6:
-            a1 = mem[mem[sxcscript_global_sp].val - 1].val;
-            mem[mem[sxcscript_global_sp].val - 1].val = write(1, &a1, 1);
-            break;
-        default:
-            break;
-    }
-}
 void sxcscript_run(union sxcscript_mem* mem) {
     int result;
     while (mem[mem[sxcscript_global_ip].val].kind != sxcscript_kind_null) {
@@ -596,9 +578,6 @@ void sxcscript_run(union sxcscript_mem* mem) {
                 break;
             case sxcscript_kind_usleep:
                 mem[mem[sxcscript_global_sp].val - 1].val = usleep(mem[mem[sxcscript_global_sp].val - 1].val);
-                break;
-            case sxcscript_kind_ext:
-                sxcscript_run_ext(mem);
                 break;
             default:
                 break;
